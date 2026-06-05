@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>4C 學習成效即時評量平台</title>
+<style>
+:root{
+  --primary:#1E3A8A; --accent:#3B82F6;
+  --c-mind:#2563EB; --bg-mind:#DBEAFE;
+  --c-ipo:#7C3AED; --bg-ipo:#EDE9FE;
+  --c-py:#DB2777;  --bg-py:#FCE7F3;
+  --ink:#1F2937; --mute:#6B7280; --line:#E5E7EB; --soft:#F8FAFC;
+  --good:#16A34A; --warn:#F59E0B; --bad:#DC2626;
+  --shadow:0 1px 3px rgba(16,24,40,.07),0 8px 24px rgba(16,24,40,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Microsoft JhengHei","PingFang TC","Noto Sans TC","Segoe UI",sans-serif;
+  color:var(--ink);background:#F1F5F9;line-height:1.65;-webkit-font-smoothing:antialiased}
+.mono{font-family:"Consolas","Courier New",monospace}
+header{background:linear-gradient(135deg,var(--primary),#2C4FC0);color:#fff;padding:22px 30px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+header::after{content:"";position:absolute;right:-50px;top:-60px;width:200px;height:200px;background:radial-gradient(circle,rgba(255,255,255,.12),transparent 70%);border-radius:50%}
+header h1{font-size:22px;letter-spacing:.5px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+header .badge{font-size:11px;font-weight:400;background:rgba(255,255,255,.18);padding:4px 10px;border-radius:20px;letter-spacing:1px}
+header p{opacity:.88;font-size:13px;margin-top:5px}
+.wrap{max-width:1160px;margin:0 auto;padding:0 22px}
+nav{background:#fff;box-shadow:var(--shadow);position:sticky;top:0;z-index:30}
+nav .wrap{display:flex;gap:2px;flex-wrap:wrap}
+.tab{padding:14px 18px;cursor:pointer;font-size:15px;font-weight:600;color:var(--mute);border-bottom:3px solid transparent;transition:.2s;white-space:nowrap}
+.tab:hover{color:var(--primary);background:var(--soft)}
+.tab.active{color:var(--primary);border-bottom-color:var(--accent)}
+.tab .n{display:inline-flex;width:22px;height:22px;border-radius:50%;background:var(--bg-mind);color:var(--primary);font-size:12px;align-items:center;justify-content:center;margin-right:7px;font-weight:800}
+main{padding:26px 0 60px}
+.panel{display:none;animation:fade .28s ease}
+.panel.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.card{background:#fff;border-radius:14px;box-shadow:var(--shadow);padding:22px;margin-bottom:18px}
+.card h2{font-size:18px;color:var(--primary);margin-bottom:5px;display:flex;align-items:center;gap:10px}
+.card h2 .bar{width:5px;height:20px;background:var(--accent);border-radius:3px}
+.card .sub{color:var(--mute);font-size:13px;margin-bottom:16px}
+h3{font-size:15px;margin:16px 0 9px;font-weight:700}
+.btn{border:none;border-radius:9px;padding:11px 19px;font-size:14px;font-weight:700;cursor:pointer;transition:.2s;font-family:inherit;display:inline-flex;align-items:center;gap:8px}
+.btn:disabled{opacity:.55;cursor:default}
+.btn.primary{background:var(--accent);color:#fff}.btn.primary:hover:not(:disabled){background:var(--primary)}
+.btn.ghost{background:#fff;color:var(--primary);border:1.5px solid var(--accent)}.btn.ghost:hover{background:var(--bg-mind)}
+.btn.danger{background:#fff;color:var(--bad);border:1.5px solid var(--bad)}.btn.danger:hover{background:#FEF2F2}
+.btn.lg{padding:13px 24px;font-size:15px}.btn.sm{padding:8px 13px;font-size:13px}
+.btn.glass{background:rgba(255,255,255,.16);color:#fff;border:1.5px solid rgba(255,255,255,.5)}.btn.glass:hover{background:rgba(255,255,255,.28)}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.notice{padding:11px 15px;border-radius:10px;font-size:13px;margin-top:13px}
+.notice.ok{background:#ECFDF5;color:#065F46;border:1px solid #A7F3D0}
+.notice.err{background:#FEF2F2;color:#991B1B;border:1px solid #FECACA}
+.notice.info{background:var(--bg-mind);color:var(--primary);border:1px solid #BFDBFE}
+.tip{font-size:12px;color:var(--mute)}
+code.k{background:var(--bg-ipo);color:var(--c-ipo);padding:1px 6px;border-radius:5px;font-size:12px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:9px 11px;text-align:left;border-bottom:1px solid var(--line)}
+th{background:var(--soft);color:var(--primary);font-weight:700;font-size:13px}
+td.num,th.num{text-align:center}
+.chip{font-size:11px;padding:3px 9px;border-radius:7px;font-weight:700;display:inline-block}
+.chip.mind{background:var(--bg-mind);color:var(--c-mind)}
+.chip.ipo{background:var(--bg-ipo);color:var(--c-ipo)}
+.chip.py{background:var(--bg-py);color:var(--c-py)}
+
+/* hero */
+.hero{background:linear-gradient(135deg,var(--primary),#3457C5 60%,#5B6FE0);color:#fff;border-radius:18px;padding:38px 32px;text-align:center;box-shadow:var(--shadow);position:relative;overflow:hidden;margin-bottom:18px}
+.hero::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 15% 20%,rgba(255,255,255,.12),transparent 40%),radial-gradient(circle at 85% 80%,rgba(255,255,255,.1),transparent 45%)}
+.hero>*{position:relative}
+.hero-tag{font-size:12px;letter-spacing:2px;opacity:.85;font-weight:700;margin-bottom:9px}
+.hero h1{font-size:31px;letter-spacing:1px;margin-bottom:12px}
+.hero-sub{font-size:14.5px;opacity:.94;max-width:740px;margin:0 auto;line-height:1.8}
+.hero-stat{display:inline-flex;gap:34px;margin-top:20px;flex-wrap:wrap;justify-content:center}
+.hero-stat .hs .v{font-size:30px;font-weight:800;line-height:1}
+.hero-stat .hs .l{font-size:12px;opacity:.85;margin-top:3px}
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:18px}
+.feat{background:#fff;border-radius:14px;padding:18px;box-shadow:var(--shadow)}
+.feat .fi{font-size:25px;margin-bottom:7px}.feat b{color:var(--primary);font-size:15px}.feat p{font-size:13px;color:var(--mute);margin-top:5px}
+.flow{display:flex;align-items:stretch;gap:8px;flex-wrap:wrap}
+.fl{flex:1;min-width:170px;display:flex;gap:11px;align-items:flex-start;background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:13px}
+.fl .num{flex:0 0 28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center}
+.fl b{display:block;font-size:14px;color:var(--primary)}.fl span{font-size:12px;color:var(--mute)}
+.flarr{display:flex;align-items:center;color:var(--accent);font-weight:800;font-size:20px}
+@media(max-width:760px){.flarr{display:none}}
+
+/* answer form */
+.id-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+.id-row>div{flex:1;min-width:180px}
+label.fl-lab{font-size:13px;font-weight:700;color:var(--primary);display:block;margin-bottom:5px}
+.opt{font-weight:400;color:var(--mute)}
+input.txt{width:100%;border:1.5px solid var(--line);border-radius:9px;padding:10px 12px;font-size:14px;font-family:inherit}
+input.txt:focus{outline:none;border-color:var(--accent)}
+.kiosk{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--primary);cursor:pointer;user-select:none}
+.qcard{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:11px;transition:.18s}
+.qcard.answered{border-color:#A7F3D0;background:#F0FDF4}
+.qmeta{font-size:12px;font-weight:700;margin-bottom:7px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.qmeta .dchip{padding:2px 9px;border-radius:6px;color:#fff}.qmeta .cc{color:var(--mute)}
+.qq{font-size:15px;margin-bottom:11px}
+.scale{display:flex;gap:7px;flex-wrap:wrap}
+.scale label{flex:1;min-width:60px;text-align:center;border:1.5px solid var(--line);border-radius:10px;padding:8px 4px;cursor:pointer;transition:.15s;user-select:none}
+.scale label:hover{border-color:var(--accent);background:var(--bg-mind)}
+.scale label.sel{background:var(--accent);border-color:var(--accent);color:#fff}
+.scale .sv{font-size:18px;font-weight:800;display:block}.scale .stxt{font-size:11px;opacity:.85}
+.submit-bar{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-top:16px;flex-wrap:wrap}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--good);color:#fff;
+  padding:13px 24px;border-radius:30px;font-weight:700;font-size:15px;box-shadow:0 8px 30px rgba(0,0,0,.2);opacity:0;pointer-events:none;transition:.3s;z-index:100}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* data area */
+.databar{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.bigcount{font-size:44px;font-weight:800;color:var(--primary);line-height:1}
+.bigcount small{font-size:15px;color:var(--mute);font-weight:600}
+.qgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:6px}
+@media(max-width:720px){.qgrid{grid-template-columns:repeat(4,1fr)}}
+.qgrid .gc{display:flex;flex-direction:column;gap:3px}
+.qgrid .gc label{font-size:10px;color:var(--mute);font-weight:700;text-align:center;white-space:nowrap}
+.qgrid .gc input{width:100%;text-align:center;border:1.5px solid var(--line);border-radius:7px;padding:7px 2px;font-size:15px;font-family:inherit}
+.qgrid .gc input:focus{outline:none;border-color:var(--accent);background:var(--bg-mind)}
+#dataTable td.del{color:var(--bad);cursor:pointer;font-weight:700;text-align:center}
+#dataTable td.del:hover{text-decoration:underline}
+.store-pill{display:inline-block;font-size:12px;font-weight:700;padding:5px 12px;border-radius:20px;background:#ECFDF5;color:#065F46;border:1px solid #A7F3D0}
+.conn-badge{display:inline-block;font-size:12px;font-weight:700;padding:5px 12px;border-radius:20px}
+.conn-badge.on{background:var(--bg-mind);color:var(--primary);border:1px solid #BFDBFE}
+.conn-badge.off{background:var(--soft);color:var(--mute);border:1px solid var(--line)}
+
+/* stats */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:13px}
+.kpi{background:linear-gradient(135deg,var(--soft),#fff);border:1px solid var(--line);border-radius:12px;padding:15px 17px}
+.kpi .lab{font-size:12px;color:var(--mute);font-weight:600}
+.kpi .val{font-size:29px;font-weight:800;color:var(--primary);line-height:1.2;margin-top:3px}
+.kpi .val small{font-size:14px;color:var(--mute);font-weight:600}
+.kpi .pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;margin-top:4px}
+.viz-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:880px){.viz-grid{grid-template-columns:1fr}}
+.viz-box{border:1px solid var(--line);border-radius:12px;padding:16px}
+.viz-box h3{margin-top:0;display:flex;align-items:center;gap:8px}
+.heat-cell{text-align:center;font-weight:700;color:#fff;border-radius:6px;padding:11px 5px;font-size:15px}
+.heat-cell small{display:block;font-size:10px;font-weight:600;opacity:.85}
+.bar-track{background:var(--line);border-radius:6px;height:25px;overflow:hidden}
+.bar-fill{height:100%;border-radius:6px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;color:#fff;font-size:12px;font-weight:700;transition:width .5s ease}
+.bar-label{display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px}
+.trend-svg{width:100%;height:auto}
+.delta-up{color:var(--good);font-weight:700}.delta-dn{color:var(--bad);font-weight:700}.delta-fl{color:var(--mute)}
+.empty{text-align:center;padding:48px 20px;color:var(--mute)}.empty .big{font-size:44px;opacity:.4;margin-bottom:10px}
+
+/* report */
+.grade-banner{border-radius:14px;padding:23px 26px;color:#fff;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+.grade-banner .g{font-size:46px;font-weight:800;line-height:1}
+.grade-banner .d{font-size:14px;opacity:.92;max-width:560px}
+.find{display:flex;gap:12px;padding:13px 15px;border-radius:10px;margin-bottom:9px;align-items:flex-start}
+.find .ic{flex:0 0 32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;color:#fff}
+.find .tx b{display:block;font-size:14px}.find .tx span{font-size:13px;color:var(--mute)}
+.find.good{background:#ECFDF5}.find.good .ic{background:var(--good)}
+.find.bad{background:#FEF2F2}.find.bad .ic{background:var(--bad)}
+.find.mid{background:#FFFBEB}.find.mid .ic{background:var(--warn)}
+.rec{border-left:4px solid var(--accent);background:var(--soft);padding:13px 15px;border-radius:0 10px 10px 0;margin-bottom:9px}
+.rec b{color:var(--primary);font-size:14px}.rec .meta{font-size:12px;color:var(--mute);margin:2px 0 6px}.rec p{font-size:13px}
+
+/* guide */
+.plat-grid,.tool-grid{display:grid;gap:12px}
+.plat-grid{grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+.tool-grid{grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
+.plat{border:1px solid var(--line);border-radius:12px;padding:15px 17px;background:linear-gradient(135deg,var(--soft),#fff)}
+.plat .nm{font-weight:800;color:var(--primary);font-size:15px}.plat .ds{font-size:13px;color:var(--mute);margin:6px 0 10px}
+.plat a.go{font-size:13px;font-weight:700;color:var(--accent);text-decoration:none}.plat a.go:hover{text-decoration:underline}
+.plat .none{font-size:12px;color:#9CA3AF;font-style:italic}
+.guide-dim{border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:18px}
+.guide-dim .gh{padding:14px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.guide-dim .gh .lt{font-weight:800;font-size:16px}
+.guide-dim .gh .c4 span{font-size:11px;font-weight:700;background:#ffffffcc;padding:3px 9px;border-radius:20px;margin-left:5px}
+.guide-body{padding:16px 18px}.guide-body .desc{font-size:14px;margin-bottom:13px}
+.tool{display:block;border:1px solid var(--line);border-radius:10px;padding:11px 13px;text-decoration:none;transition:.2s;background:#fff}
+.tool:hover{border-color:var(--accent);box-shadow:var(--shadow)}
+.tool .tn{font-weight:700;font-size:14px;color:var(--primary);display:flex;justify-content:space-between}
+.tool .tn .ext{font-size:11px;color:var(--accent)}.tool .td{font-size:12px;color:var(--mute);margin-top:3px}
+.video-frame{position:relative;width:100%;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#000;border:1px solid var(--line);margin-top:14px}
+.video-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.video-ph{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:#fff;background:linear-gradient(135deg,#1F2937,#374151);text-align:center;padding:18px}
+.video-ph .pl{font-size:32px;opacity:.5;margin-bottom:7px}
+.yt-link{display:flex;align-items:center;gap:16px;text-decoration:none;border:1px solid var(--line);border-radius:12px;
+  padding:16px 18px;background:linear-gradient(135deg,#FEF2F2,#fff);transition:.2s;margin-top:8px}
+.yt-link:hover{border-color:#EF4444;box-shadow:var(--shadow);transform:translateY(-2px)}
+.yt-link.big{padding:22px 24px}
+.yt-link .yt-pl{flex:0 0 52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#FF0000,#CC0000);
+  color:#fff;font-size:22px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(239,68,68,.35)}
+.yt-link .yt-tx b{display:block;font-size:15px;color:var(--ink)}
+.yt-link .yt-tx span{font-size:13px;color:var(--mute)}
+@media print{nav,.btn,.toast,.no-print{display:none!important}.panel{display:block!important}}
+
+/* AI 賦能 視覺 */
+.ai-badge{display:inline-block;font-size:11px;font-weight:800;letter-spacing:2px;color:#fff;
+  background:linear-gradient(90deg,#7C3AED,#3B82F6);padding:4px 12px;border-radius:20px;margin-bottom:8px}
+.ai-banner{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;
+  background:linear-gradient(120deg,#0F172A,#1E3A8A 55%,#6D28D9);color:#fff;border-radius:16px;padding:24px 28px;margin-bottom:18px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.ai-banner::after{content:"";position:absolute;right:-40px;bottom:-60px;width:220px;height:220px;
+  background:radial-gradient(circle,rgba(124,58,237,.35),transparent 70%);border-radius:50%}
+.ai-banner>*{position:relative}
+.ai-banner h3{font-size:21px;margin-bottom:6px}
+.ai-banner p{font-size:13.5px;opacity:.9;max-width:560px}
+.ai-banner-cta{display:flex;gap:10px;flex-wrap:wrap}
+.ai-hero{background:linear-gradient(120deg,#0F172A,#1E3A8A 55%,#6D28D9);color:#fff;border-radius:16px;
+  padding:26px 28px;margin-bottom:18px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.ai-hero::after{content:"";position:absolute;right:-50px;top:-60px;width:240px;height:240px;background:radial-gradient(circle,rgba(124,58,237,.32),transparent 70%);border-radius:50%}
+.ai-hero>*{position:relative}
+.ai-hero h2{font-size:23px;margin-bottom:8px}
+.ai-hero p{font-size:14px;opacity:.92;max-width:680px}
+.eco-flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:16px}
+.eco-flow .eco{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;
+  font-size:13px;font-weight:700;padding:7px 14px;border-radius:10px}
+.eco-flow .eco-arr{color:#A5B4FC;font-weight:800}
+.plat-hot{border:1.5px solid #7C3AED;background:linear-gradient(135deg,#F5F3FF,#fff)}
+.hot-tag{font-size:10px;font-weight:800;color:#fff;background:linear-gradient(90deg,#7C3AED,#3B82F6);padding:2px 8px;border-radius:20px;margin-left:8px;vertical-align:middle}
+.plat{transition:.2s}.plat:hover{box-shadow:var(--shadow);transform:translateY(-2px)}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>📊 4C 學習成效即時評量平台 <span class="badge">AI EMPOWERED · ZERO BACKEND</span></h1>
+  <p>AI 賦能學習生態 · 純前端零後端｜學生作答即時寫入資料區，統計與成效分析同步生成</p>
+</div></header>
+
+<nav><div class="wrap">
+  <div class="tab active" data-tab="home"><span class="n">①</span>總覽</div>
+  <div class="tab" data-tab="answer"><span class="n">②</span>學生作答</div>
+  <div class="tab" data-tab="data"><span class="n">③</span>前端資料區</div>
+  <div class="tab" data-tab="stats"><span class="n">④</span>即時統計</div>
+  <div class="tab" data-tab="report"><span class="n">⑤</span>報告與建議</div>
+  <div class="tab" data-tab="guide"><span class="n">⑥</span>學習導覽</div>
+</div></nav>
+
+<main class="wrap">
+
+<!-- 總覽 -->
+<section class="panel active" id="home">
+  <div class="hero">
+    <div class="hero-tag">PROJECT SYSTEMS · 即時評量平台</div>
+    <h1>4C 學習成效即時評量</h1>
+    <p class="hero-sub">以「批判思考・溝通協調・團隊合作・創新創造」為主軸，橫跨<b>心智圖 → IPO 分析 → Python 編碼</b>三面向。作答即存入網頁前端資料區，統計與報告即時生成——最快蒐集、零等待。</p>
+    <div class="hero-stat" id="heroStat"></div>
+    <div class="btn-row" style="justify-content:center;margin-top:18px">
+      <button class="btn primary lg" onclick="go('answer')">✍ 開始作答</button>
+      <button class="btn glass lg" onclick="go('data')">🗂 前端資料區</button>
+      <button class="btn glass lg" onclick="go('stats')">📊 即時統計</button>
+    </div>
+  </div>
+  <div class="feat-grid">
+    <div class="feat"><div class="fi">⚡</div><b>最快蒐集</b><p>作答送出即寫入前端資料區，統計同步更新，無須匯出或等待後端。</p></div>
+    <div class="feat"><div class="fi">🗂</div><b>前端資料區</b><p>答案直接存在瀏覽器（localStorage），只存分數、資料量小，可匯出 JSON／CSV 備份。</p></div>
+    <div class="feat"><div class="fi">🎯</div><b>4C × 三面向</b><p>12 核心題＋4 教學成效題，產生熱力圖、雷達圖、信度與即時趨勢。</p></div>
+    <div class="feat"><div class="fi">🔌</div><b>零後端 · 離線可用</b><p>單一 HTML 檔，雙擊即用，無安裝、無帳號、無網路依賴。</p></div>
+  </div>
+  <div class="ai-banner">
+    <div class="ai-banner-tx">
+      <div class="ai-badge">AI · EMPOWERED LEARNING</div>
+      <h3>AI 賦能學習生態</h3>
+      <p>以 AI 輔助自學、專題創作與成效評量，串連四步驟教學：心智圖 → IPO → Python → 應用模擬。</p>
+    </div>
+    <div class="ai-banner-cta" id="aiBannerCta"></div>
+  </div>
+  <div class="card">
+    <h2><span class="bar"></span>運作流程</h2>
+    <div class="flow">
+      <div class="fl"><span class="num">1</span><div><b>學生作答</b><span>網頁填 16 題自評</span></div></div>
+      <div class="flarr">→</div>
+      <div class="fl"><span class="num">2</span><div><b>寫入資料區</b><span>直接存於前端（只存答案）</span></div></div>
+      <div class="flarr">→</div>
+      <div class="fl"><span class="num">3</span><div><b>即時統計</b><span>圖表與趨勢同步生成</span></div></div>
+      <div class="flarr">→</div>
+      <div class="fl"><span class="num">4</span><div><b>報告建議</b><span>自動產出成效報告</span></div></div>
+    </div>
+    <div class="notice info" id="storeState" style="margin-top:14px"></div>
+  </div>
+</section>
+
+<!-- 學生作答 -->
+<section class="panel" id="answer">
+  <div class="card">
+    <h2><span class="bar"></span>學習成效自評問卷</h2>
+    <p class="sub">1＝非常不同意，5＝非常同意。共 16 題，約 3 分鐘。送出即存入前端資料區。</p>
+    <div class="id-row">
+      <div><label class="fl-lab">學號 <span class="opt">（選填）</span></label><input class="txt" id="fSid" placeholder="例：B11012345"></div>
+      <div><label class="fl-lab">組別 <span class="opt">（選填）</span></label><input class="txt" id="fGroup" placeholder="例：第 3 組"></div>
+      <div><label class="fl-lab">資訊背景 <span class="opt">（分類）</span></label>
+        <select class="txt" id="fBg"><option value="">— 請選擇 —</option><option>資訊相關</option><option>非資訊相關</option></select></div>
+      <div style="flex:0 0 auto;display:flex;align-items:flex-end">
+        <label class="kiosk"><input type="checkbox" id="kioskMode"> 連續作答模式（送出後自動重置，適合輪流作答）</label>
+      </div>
+    </div>
+    <div id="quizRender"></div>
+    <div class="submit-bar">
+      <div class="tip" id="quizProgress"></div>
+      <button class="btn primary lg" id="subBtn" onclick="submitQuiz()">✓ 送出作答</button>
+    </div>
+    <div id="quizMsg"></div>
+  </div>
+</section>
+
+<!-- 前端資料區 -->
+<section class="panel" id="data">
+  <div class="card">
+    <h2><span class="bar"></span>🗂 前端資料區</h2>
+    <p class="sub">所有作答答案即時儲存於此（瀏覽器本機）。此資料區是統計分析的唯一資料來源。</p>
+    <div class="databar">
+      <div class="bigcount"><span id="dataCount">0</span><small> 筆作答</small></div>
+      <span class="store-pill" id="storePill">💾 本機即時儲存</span>
+      <span class="conn-badge off"></span>
+    </div>
+    <div class="btn-row" style="margin-top:14px">
+      <button class="btn primary" onclick="syncNow(false)">🔄 立即同步收集區</button>
+      <button class="btn ghost" onclick="exportJSON()">⬇ 匯出 JSON 備份</button>
+      <button class="btn ghost" onclick="exportCSV()">⬇ 匯出 CSV</button>
+      <button class="btn ghost" onclick="document.getElementById('jfile').click()">⬆ 匯入 JSON</button>
+      <button class="btn ghost" onclick="document.getElementById('cfile').click()">⬆ 匯入 CSV</button>
+      <button class="btn ghost" onclick="loadDemo()">🎲 載入示範資料</button>
+      <button class="btn danger" onclick="clearData()">🗑 清空本機快取</button>
+    </div>
+    <input type="file" id="jfile" accept=".json,application/json" style="display:none">
+    <input type="file" id="cfile" accept=".csv" style="display:none">
+    <div id="dataMsg"></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="bar"></span>☁ 雲端收集區後端（總表＋分類分頁版）</h2>
+    <p class="sub">「收集區」總表存全部作答並以「資訊背景」<b>欄位</b>記錄分類；同筆同時鏡射到「資訊相關／非資訊相關／未分類」<b>分頁</b>（無背景欄）。統計只讀總表，分頁供分別檢視。若 Drive 沒出現試算表，多半是未先授權，請務必先執行一次 <code class="k">setup()</code>。</p>
+    <div class="btn-row">
+      <button class="btn primary" onclick="downloadBackend()">⬇ 下載後端 (.gs)</button>
+      <button class="btn ghost" onclick="copyBackend()">📋 複製後端腳本</button>
+    </div>
+    <ol style="margin:12px 0 4px;padding-left:20px;font-size:13px">
+      <li>貼入 <code class="k">script.google.com</code> 新專案並儲存。</li>
+      <li><b>先「執行」一次 <code class="k">setup()</code></b>：完成授權並建立試算表「4C評量收集區」（含「收集區」總表＋資訊相關／非資訊相關／未分類三個分頁）。</li>
+      <li>部署 → 新增部署作業 → 網頁應用程式；<b>執行身分：我</b>；<b>誰可以存取：任何人</b>。</li>
+      <li>複製 <code class="k">/exec</code> 網址，貼到本檔頂端 <code class="k">COLLECT_URL</code>（目前已填入你的網址）。</li>
+      <li>日後若改後端程式，需「管理部署作業 → 編輯 → 版本：新版本」重新部署才生效。</li>
+      <li><b>若欄位錯位（混到舊版資料）</b>：在編輯器執行一次 <code class="k">reset()</code>，會清空舊資料並重建對齊的標頭（總表 20 欄、分頁 19 欄）。</li>
+    </ol>
+    <p class="tip">介面：doPost 同時寫入「收集區」總表（含資訊背景欄）與對應分類分頁；doGet 只讀總表回傳 <code class="k">{ts,sid,group,bg,scores[16]}</code>。前端統計與分組比較自動沿用。</p>
+    <div id="backendMsg"></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="bar"></span>⚡ 快速批次輸入</h2>
+    <p class="sub">老師可逐列鍵入紙本答案：填完一列按 <b>Enter</b> 或「新增」即存入資料區，游標自動回到第一格，連續輸入最快。</p>
+    <div class="id-row" style="margin-bottom:10px">
+      <div><label class="fl-lab">學號 <span class="opt">（選填）</span></label><input class="txt" id="qSid"></div>
+      <div><label class="fl-lab">組別 <span class="opt">（選填）</span></label><input class="txt" id="qGroup"></div>
+      <div><label class="fl-lab">資訊背景 <span class="opt">（分類）</span></label>
+        <select class="txt" id="qBg"><option value="">— 請選擇 —</option><option>資訊相關</option><option>非資訊相關</option></select></div>
+    </div>
+    <div class="qgrid" id="quickGrid"></div>
+    <div class="btn-row" style="margin-top:12px">
+      <button class="btn primary" onclick="quickAdd()">＋ 新增此列</button>
+      <span class="tip">每格輸入 1–5；空白或非 1–5 將被忽略。</span>
+    </div>
+    <div id="quickMsg"></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="bar"></span>資料明細</h2>
+    <div style="overflow:auto"><table id="dataTable"></table></div>
+  </div>
+</section>
+
+<!-- 即時統計 -->
+<section class="panel" id="stats">
+  <div id="statsEmpty" class="card"><div class="empty"><div class="big">📈</div>
+    資料區尚無作答。請至「學生作答」填答、用「快速批次輸入」鍵入，或於「前端資料區」載入示範資料。</div></div>
+  <div id="statsContent" style="display:none">
+    <div class="card"><h2><span class="bar"></span>關鍵指標</h2><div class="kpi-grid" id="kpiGrid"></div></div>
+    <div class="card">
+      <h2><span class="bar"></span>📈 即時趨勢分析</h2>
+      <p class="sub">隨作答累積呈現收集進度與班級平均走勢，即時掌握成效變化。</p>
+      <div class="viz-grid">
+        <div class="viz-box"><h3>累積作答數</h3><div id="trendCount"></div></div>
+        <div class="viz-box"><h3>整體 4C ＋ 三面向 累積平均走勢</h3><div id="trendAvg"></div></div>
+      </div>
+      <h3>分時段趨勢表</h3>
+      <div style="overflow:auto"><table id="trendTable"></table></div>
+    </div>
+    <div class="card">
+      <h2><span class="bar"></span>4C × 三面向 成效熱力圖</h2>
+      <p class="sub">各格平均分（1–5），紅（弱）→綠（強），快速定位待強化的能力組合。</p>
+      <div id="heatmap"></div>
+    </div>
+    <div class="card">
+      <h2><span class="bar"></span>🧩 資訊背景分組比較</h2>
+      <p class="sub">依學生「資訊相關／非資訊相關」背景比較學習成效，檢視四步驟教學對不同背景學生的差異。</p>
+      <div style="overflow:auto"><table id="bgTable"></table></div>
+      <div id="bgBars" style="margin-top:16px"></div>
+      <div class="notice info" id="bgNote" style="margin-top:12px"></div>
+    </div>
+    <div class="viz-grid">
+      <div class="card"><div class="viz-box" style="border:none;padding:0"><h3>🧭 4C 能力雷達圖</h3><div id="radar"></div></div></div>
+      <div class="card"><div class="viz-box" style="border:none;padding:0">
+        <h3>📚 三面向平均</h3><div id="dimBars"></div>
+        <h3 style="margin-top:18px">🎯 4C 能力平均</h3><div id="compBars"></div>
+      </div></div>
+    </div>
+    <div class="card"><h2><span class="bar"></span>教學成效題組</h2><div id="teachBars"></div></div>
+    <div class="card">
+      <h2><span class="bar"></span>逐題明細統計</h2>
+      <p class="sub">M＝平均，SD＝標準差，n＝有效回應數。</p>
+      <div style="overflow:auto"><table id="detailTable"></table></div>
+      <div class="notice info" id="alphaBox" style="margin-top:13px"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 報告 -->
+<section class="panel" id="report">
+  <div id="reportEmpty" class="card"><div class="empty"><div class="big">📝</div>資料區尚無作答資料。</div></div>
+  <div id="reportContent" style="display:none">
+    <div class="card"><div class="grade-banner" id="gradeBanner"></div></div>
+    <div class="card"><h2><span class="bar"></span>成效摘要</h2><div id="findings"></div></div>
+    <div class="card">
+      <h2><span class="bar"></span>教學改善建議</h2>
+      <p class="sub">依各評量格分數（門檻 3.8）自動產生對應教學策略，由最待強化者優先列出。</p>
+      <div id="recs"></div>
+    </div>
+    <div class="card no-print"><div class="btn-row"><button class="btn primary" onclick="window.print()">🖨 列印 / 匯出 PDF</button></div></div>
+  </div>
+</section>
+
+<!-- 學習導覽 -->
+<section class="panel" id="guide">
+  <div class="ai-hero">
+    <div class="ai-badge">AI · EMPOWERED LEARNING</div>
+    <h2>AI 賦能學習生態</h2>
+    <p>以 AI 輔助學生自學、專題創作與評量回饋，讓四步驟教學（心智圖 → IPO → Python → 應用模擬）在 AI 的協作下加速深化。</p>
+    <div class="eco-flow">
+      <span class="eco">🤖 AI 賦能學習平台</span><span class="eco-arr">→</span>
+      <span class="eco">🧠 智慧專題創作</span><span class="eco-arr">→</span>
+      <span class="eco">📊 4C 成效評量</span><span class="eco-arr">→</span>
+      <span class="eco">🤝 師生協同回饋</span>
+    </div>
+  </div>
+  <div class="card">
+    <h2><span class="bar"></span>課程專屬平台</h2>
+    <p class="sub">AI 賦能學習生態的三大入口（網址由教師於檔案頂端 <code class="k">COURSE_PLATFORMS</code> 設定）。</p>
+    <div class="plat-grid" id="platGrid"></div>
+  </div>
+  <div class="card" id="channelCard"></div>
+  <div id="guideDims"></div>
+</section>
+
+</main>
+<div class="toast" id="toast"></div>
+<footer style="text-align:center;color:var(--mute);font-size:12px;padding:22px">4C 學習成效即時評量平台　·　純前端單檔運作，資料僅存於本機瀏覽器，不外傳</footer>
+
+<script>
+/* ====== 可編輯區：課程平台與影片 ====== */
+const COURSE_PLATFORMS=[
+  {name:'AI-empower-platform',icon:'🤖',url:'https://pjkuo.github.io/AI-empower-platform/',desc:'AI 賦能學習平台——學生自學與 AI 輔助入口',hot:true},
+  {name:'智慧專題創作平台',icon:'🧠',url:'https://pjkuo.github.io/mind_ipo_python2pptx/',desc:'NPUST 專題系統課程主平台（心智圖→IPO→Python→應用模擬）'},
+  {name:'師生協同評量系統',icon:'🤝',url:'https://pjkuo.github.io/AI-empower-system/',desc:'期末專題自評與雙簽核評量'}
+];
+// YouTube 教學頻道（頻道網址會自動轉成上傳清單嵌入播放）
+const CHANNEL_URL='https://www.youtube.com/channel/UCxSRyHQ7kWgGBGqEUjK8dcQ';
+const DIM_VIDEO={mind:{title:'心智圖教學影片',url:''},ipo:{title:'IPO 分析教學影片',url:''},py:{title:'Python 編碼教學影片',url:''}};
+const DB_KEY='fourC_frontend_v2';
+/* ★ 雲端收集區：學生各裝置作答 POST 至此，統計端 GET 取回。留空＝純本機模式。 */
+const COLLECT_URL='https://script.google.com/macros/s/AKfycbxUczkubbK-EVWXpQiQun8Hjf7WwP29kTIhFHZKnuosq2IrwIAe5zzTSv8NEdAioIsX/exec';
+const AUTO_REFRESH_SEC=20;  // 雲端模式自動更新秒數，0＝關閉
+const BG_OPTS=['資訊相關','非資訊相關'];  // 學生資訊背景分類
+
+/* ====== 資料結構 ====== */
+const DIMS=[
+  {id:'mind',name:'心智圖',tag:'Mind',cls:'mind',color:'#2563EB',bg:'#DBEAFE'},
+  {id:'ipo', name:'IPO 分析',tag:'IPO',cls:'ipo',color:'#7C3AED',bg:'#EDE9FE'},
+  {id:'py',  name:'Python 編碼',tag:'Code',cls:'py',color:'#DB2777',bg:'#FCE7F3'}
+];
+const COMPS=[
+  {id:'crit',name:'批判思考',en:'Critical Thinking'},
+  {id:'comm',name:'溝通協調',en:'Communication'},
+  {id:'collab',name:'團隊合作',en:'Collaboration'},
+  {id:'create',name:'創新創造',en:'Creativity'}
+];
+const MATRIX={
+  mind:{crit:'我能透過心智圖釐清專題問題的核心概念與分支關係',comm:'我能運用心智圖向組員清楚說明專題的整體架構',collab:'我們能共同討論並反覆修正心智圖的內容',create:'我能在心智圖中發想多元而新穎的點子'},
+  ipo:{crit:'我能正確辨識專題的輸入Input處理Process與輸出Output要素',comm:'我能運用IPO圖向他人解釋系統的運作流程',collab:'我們能分工合作完成IPO各環節的分析',create:'我能設計出有效且具巧思的處理Process邏輯'},
+  py:{crit:'我能將問題拆解成可程式化的邏輯步驟',comm:'我能透過註解與命名讓他人理解我的程式碼',collab:'我們能協作進行除錯與程式碼整合',create:'我能運用Python實現具創意的解決方案'}
+};
+const TEACH=[
+  '課程的四步驟教學（心智圖、IPO、Python、應用模擬）有助於我的學習',
+  '教師的講解與示範清楚且易於理解',
+  '課程整體提升了我發現問題與解決問題的能力',
+  '我願意將本課程推薦給其他同學'
+];
+const RECMAP={
+  mind_crit:'引導學生以 5W1H 提問法拆解心智圖核心節點，先定義問題再展開分支。',
+  mind_comm:'安排組間互相講解心智圖，以「30 秒電梯簡報」訓練架構表達。',
+  mind_collab:'採用線上共編工具（Coggle／XMind）同步修訂，記錄修改歷程。',
+  mind_create:'加入發散思考暖身（腦力激盪、隨機詞聯想、SCAMPER），延後評價。',
+  ipo_crit:'提供更多 IPO 拆解範例與反例對照練習，辨識 I/P/O 常見誤判。',
+  ipo_comm:'要求學生口頭走讀 IPO 流程並錄影自評。',
+  ipo_collab:'明確分派 Input／Process／Output 三角色並輪流負責。',
+  ipo_create:'鼓勵比較多種 Process 設計方案，討論效率與可行性取捨。',
+  py_crit:'導入「先寫虛擬碼再寫程式」的步驟化訓練。',
+  py_comm:'建立程式碼註解規範與同儕程式碼審查機制。',
+  py_collab:'使用 Colab／Git 共享，採配對程式設計。',
+  py_create:'設計開放式題目並接受多元解法，鼓勵嘗試函式庫與替代演算法。'
+};
+// 扁平題目（順序固定＝資料區 scores 陣列順序）
+const QLIST=[];
+DIMS.forEach(d=>COMPS.forEach(c=>QLIST.push({key:MATRIX[d.id][c.id],type:'m',dim:d.id,comp:c.id})));
+TEACH.forEach((t,i)=>QLIST.push({key:t,type:'t',idx:i}));
+const QIDX={};QLIST.forEach((q,i)=>{QIDX[q.type==='m'?q.dim+'_'+q.comp:'t'+q.idx]=i;});
+const N=QLIST.length;
+
+let DATA=[]; // 每筆：{id,ts,sid,group,scores:[16]}
+
+/* ====== 工具 ====== */
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function uid(){return 'r'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+function now(){const d=new Date(),p=n=>String(n).padStart(2,'0');
+  return `${d.getFullYear()}/${p(d.getMonth()+1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;}
+function stamp(){const d=new Date(),p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}`;}
+function mean(a){a=a.filter(x=>!isNaN(x));return a.length?a.reduce((s,x)=>s+x,0)/a.length:NaN;}
+function sd(a){a=a.filter(x=>!isNaN(x));if(a.length<2)return 0;const m=mean(a);return Math.sqrt(a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-1));}
+function variance(a){const s=sd(a);return s*s;}
+function val(rec,qi){const v=rec.scores[qi];return (v===''||v==null)?NaN:parseFloat(v);}
+function cellArr(d,c){const qi=QIDX[d+'_'+c];return DATA.map(r=>val(r,qi));}
+function teachArr(i){const qi=QIDX['t'+i];return DATA.map(r=>val(r,qi));}
+function ovOf(r){return mean(DIMS.flatMap(d=>COMPS.map(c=>val(r,QIDX[d.id+'_'+c.id]))));}
+function dimOf(r,id){return mean(COMPS.map(c=>val(r,QIDX[id+'_'+c.id])));}
+
+/* ====== 前端資料區（localStorage） ====== */
+let STORE_OK=true;
+function dbLoad(){try{const s=localStorage.getItem(DB_KEY);return s?JSON.parse(s):[];}catch(e){STORE_OK=false;return [];}}
+function dbSave(){try{localStorage.setItem(DB_KEY,JSON.stringify(DATA));return true;}catch(e){STORE_OK=false;return false;}}
+function refresh(){dbSave();renderData();compute();refreshHome();}
+function refreshHome(){
+  const n=DATA.length,ov=n?mean(DATA.map(ovOf)):NaN;
+  const hs=document.getElementById('heroStat');
+  if(hs)hs.innerHTML=`<div class="hs"><div class="v">${n}</div><div class="l">已收集作答</div></div>
+    <div class="hs"><div class="v">${n?ov.toFixed(2):'–'}</div><div class="l">整體 4C 平均</div></div>
+    <div class="hs"><div class="v">16</div><div class="l">評量題數</div></div>`;
+  const el=document.getElementById('storeState');
+  if(el)el.innerHTML=isCloud()
+    ?`☁ 雲端收集區已啟用：學生各裝置作答將送至同一 Google 試算表，統計端自動同步彙整（共 ${n} 筆${lastSync?'，最後同步 '+lastSync:''}）。`
+    :(STORE_OK
+      ?`💾 前端資料區運作正常，作答即時保存於本機瀏覽器（共 ${n} 筆）。建議定期匯出 JSON 備份。`
+      :`⚠ 目前環境無法使用本機儲存（可能為預覽沙箱），資料僅保留於本次工作階段。請下載本檔於瀏覽器開啟，或匯出 JSON 備份。`);
+  const sp=document.getElementById('storePill');if(sp)sp.textContent=isCloud()?'☁ 雲端收集區':(STORE_OK?'💾 本機即時儲存':'⚠ 暫存（本次階段）');
+}
+
+/* ====== 雲端收集區 (Apps Script Web App) ====== */
+let lastSync='';
+function isCloud(){return !!(COLLECT_URL&&COLLECT_URL.trim());}
+async function cloudPost(payload){
+  await fetch(COLLECT_URL.trim(),{method:'POST',mode:'no-cors',body:JSON.stringify(payload)});
+  return true;
+}
+async function cloudFetch(){
+  const res=await fetch(COLLECT_URL.trim()+(COLLECT_URL.includes('?')?'&':'?')+'t='+Date.now());
+  if(!res.ok)throw new Error('HTTP '+res.status);
+  const arr=await res.json();
+  if(!Array.isArray(arr))throw new Error('回傳格式錯誤');
+  DATA=arr.map(row=>({id:row.id||uid(),ts:String(row.ts||''),sid:String(row.sid||''),group:String(row.group||''),bg:String(row.bg||''),
+    scores:(row.scores||row.s||[]).map(v=>(v===''||v==null)?'':parseFloat(v))}));
+  lastSync=now();return DATA.length;
+}
+async function syncNow(silent){
+  if(!isCloud()){if(!silent)msg('dataMsg','info','尚未設定雲端收集區，目前為本機模式。');refresh();return;}
+  try{const n=await cloudFetch();dbSave();renderData();compute();refreshHome();updateConnBadges();
+    if(!silent)msg('dataMsg','ok',`✓ 已從雲端收集區同步 ${n} 筆（${lastSync}）。`);}
+  catch(e){if(!silent)msg('dataMsg','err','✗ 同步失敗：'+e.message+'。請確認 Web App 已部署為「任何人可存取」。');}
+}
+async function pushRecord(rec){
+  DATA.push(rec);refresh();              // 樂觀寫入：前端資料區與統計即時更新
+  if(isCloud()){
+    try{await cloudPost({ts:rec.ts,sid:rec.sid,group:rec.group,bg:rec.bg||'',scores:rec.scores});}
+    catch(e){/* 已暫存本地，稍後同步會以雲端為準 */}
+  }
+}
+let autoTimer=null;
+function startAuto(){if(autoTimer)clearInterval(autoTimer);if(isCloud()&&AUTO_REFRESH_SEC>0)autoTimer=setInterval(()=>syncNow(true),AUTO_REFRESH_SEC*1000);}
+function updateConnBadges(){
+  const cloud=isCloud();
+  document.querySelectorAll('.conn-badge').forEach(el=>{
+    el.innerHTML=cloud?`☁ 雲端收集區　<b>已連線</b>${lastSync?'　·　最後同步 '+lastSync:''}`:`💾 本機資料庫模式`;
+    el.className='conn-badge '+(cloud?'on':'off');});
+}
+
+/* ====== Tabs ====== */
+function go(id){
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===id));
+  document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===id));
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>go(t.dataset.tab));
+
+/* ====== 學生作答 ====== */
+const ANS={};
+function renderQuiz(){
+  let h='';
+  QLIST.forEach((qq,i)=>{
+    let dchip,cc;
+    if(qq.type==='m'){const d=DIMS.find(x=>x.id===qq.dim),c=COMPS.find(x=>x.id===qq.comp);
+      dchip=`<span class="dchip" style="background:${d.color}">${d.tag}</span>`;cc=`<span class="cc">${d.name}・${c.name}</span>`;}
+    else{dchip=`<span class="dchip" style="background:var(--primary)">教學 T${qq.idx+1}</span>`;cc=`<span class="cc">教學成效</span>`;}
+    const L=['非常不同意','不同意','普通','同意','非常同意'];
+    let sc='';for(let v=1;v<=5;v++)sc+=`<label onclick="pick(${i},${v},this)"><span class="sv">${v}</span><span class="stxt">${L[v-1]}</span></label>`;
+    h+=`<div class="qcard" id="qc${i}"><div class="qmeta">${dchip}${cc}</div><div class="qq">${i+1}. ${esc(qq.key)}</div><div class="scale">${sc}</div></div>`;
+  });
+  document.getElementById('quizRender').innerHTML=h;updateProgress();
+}
+function pick(i,v,el){ANS[i]=v;
+  el.parentNode.querySelectorAll('label').forEach(l=>l.classList.remove('sel'));el.classList.add('sel');
+  document.getElementById('qc'+i).classList.add('answered');updateProgress();}
+function updateProgress(){document.getElementById('quizProgress').textContent=`已完成 ${Object.keys(ANS).length} / ${N} 題`;}
+async function submitQuiz(){
+  const missing=[];QLIST.forEach((q,i)=>{if(!ANS[i])missing.push(i+1);});
+  if(missing.length){msg('quizMsg','err',`✗ 尚有 ${missing.length} 題未作答（第 ${missing.slice(0,8).join('、')}${missing.length>8?'…':''} 題）。`);
+    const f=document.getElementById('qc'+(missing[0]-1));if(f)f.scrollIntoView({behavior:'smooth',block:'center'});return;}
+  const rec={id:uid(),ts:now(),sid:document.getElementById('fSid').value.trim(),group:document.getElementById('fGroup').value.trim(),
+    bg:document.getElementById('fBg').value,scores:QLIST.map((q,i)=>ANS[i])};
+  const btn=document.getElementById('subBtn');if(btn){btn.disabled=true;btn.textContent='送出中…';}
+  await pushRecord(rec);
+  toast(`✓ 已收集第 ${DATA.length} 筆`);
+  for(const k in ANS)delete ANS[k];
+  document.getElementById('fSid').value='';document.getElementById('fGroup').value='';document.getElementById('fBg').value='';
+  renderQuiz();
+  if(btn){btn.disabled=false;btn.textContent='✓ 送出作答';}
+  const where=isCloud()?'已送至雲端收集區':'已存入前端資料區';
+  if(document.getElementById('kioskMode').checked){window.scrollTo({top:0,behavior:'smooth'});msg('quizMsg','ok',`✓ ${where}，可換下一位同學作答。`);}
+  else msg('quizMsg','ok',`✓ 作答${where}！目前累計 ${DATA.length} 筆。`);
+}
+
+/* ====== 快速批次輸入 ====== */
+function renderQuickGrid(){
+  let h='';
+  QLIST.forEach((qq,i)=>{
+    let lab;if(qq.type==='m'){const d=DIMS.find(x=>x.id===qq.dim),c=COMPS.find(x=>x.id===qq.comp);lab=d.tag+'·'+c.name.slice(0,2);}
+    else lab='T'+(qq.idx+1);
+    h+=`<div class="gc"><label>${lab}</label><input id="qg${i}" inputmode="numeric" maxlength="1" onkeydown="qgKey(event,${i})" oninput="qgNext(this,${i})"></div>`;
+  });
+  document.getElementById('quickGrid').innerHTML=h;
+}
+function qgNext(el,i){el.value=el.value.replace(/[^1-5]/g,'');if(el.value&&i<N-1){const nx=document.getElementById('qg'+(i+1));if(nx)nx.focus();}}
+function qgKey(e,i){if(e.key==='Enter'){e.preventDefault();quickAdd();}}
+function quickAdd(){
+  const scores=[];let filled=0;
+  for(let i=0;i<N;i++){const v=document.getElementById('qg'+i).value.trim();
+    if(v>='1'&&v<='5'){scores.push(parseInt(v));filled++;}else scores.push('');}
+  if(filled<8){msg('quickMsg','err',`✗ 至少需填 8 題（目前 ${filled} 題）。`);return;}
+  pushRecord({id:uid(),ts:now(),sid:document.getElementById('qSid').value.trim(),group:document.getElementById('qGroup').value.trim(),bg:document.getElementById('qBg').value,scores});
+  toast(`✓ 已新增第 ${DATA.length} 筆`);
+  for(let i=0;i<N;i++)document.getElementById('qg'+i).value='';
+  document.getElementById('qSid').value='';document.getElementById('qGroup').value='';document.getElementById('qBg').value='';
+  document.getElementById('qg0').focus();
+  msg('quickMsg','ok',`✓ 已新增，資料區現有 ${DATA.length} 筆。游標已回到第一格。`);
+}
+
+/* ====== 資料區渲染 / 管理 ====== */
+function renderData(){
+  document.getElementById('dataCount').textContent=DATA.length;
+  let h='<tr><th>#</th><th>時間</th><th>學號</th><th>組別</th><th>資訊背景</th>';
+  DIMS.forEach(d=>COMPS.forEach(c=>h+=`<th class="num">${d.tag}·${c.name.slice(0,2)}</th>`));
+  TEACH.forEach((_,i)=>h+=`<th class="num">T${i+1}</th>`);h+='<th>操作</th></tr>';
+  if(!DATA.length)h+=`<tr><td colspan="23" style="text-align:center;color:var(--mute);padding:22px">資料區尚無紀錄</td></tr>`;
+  DATA.forEach((r,i)=>{
+    h+=`<tr><td>${i+1}</td><td style="font-size:12px;white-space:nowrap">${esc(r.ts||'')}</td><td>${esc(r.sid||'–')}</td><td>${esc(r.group||'–')}</td><td>${esc(r.bg||'–')}</td>`;
+    DIMS.forEach(d=>COMPS.forEach(c=>{const v=r.scores[QIDX[d.id+'_'+c.id]];h+=`<td class="num">${v===''||v==null?'–':v}</td>`;}));
+    TEACH.forEach((_,k)=>{const v=r.scores[QIDX['t'+k]];h+=`<td class="num">${v===''||v==null?'–':v}</td>`;});
+    h+=`<td class="del" onclick="delRec('${r.id}')">刪除</td></tr>`;
+  });
+  document.getElementById('dataTable').innerHTML=h;
+}
+function delRec(id){if(!confirm('確定刪除這筆作答？'))return;DATA=DATA.filter(r=>r.id!==id);refresh();}
+function clearData(){if(!DATA.length)return;if(!confirm(`確定清空資料區（共 ${DATA.length} 筆）？建議先匯出備份，此動作無法復原。`))return;
+  DATA=[];refresh();msg('dataMsg','ok','✓ 資料區已清空。');}
+function exportJSON(){dl(`4C資料區_${stamp()}.json`,JSON.stringify(DATA,null,2),'application/json');}
+function exportCSV(){
+  const header=['時間戳記','學號','組別','資訊背景',...QLIST.map(q=>q.key)].join(',');
+  const lines=DATA.map(r=>{const cells=[r.ts||'',r.sid||'',r.group||'',r.bg||'',...r.scores.map(v=>v==null?'':v)];
+    return cells.map(c=>/[",\n]/.test(String(c))?'"'+String(c).replace(/"/g,'""')+'"':c).join(',');});
+  dl(`4C資料區_${stamp()}.csv`,'\ufeff'+header+'\n'+lines.join('\n')+'\n','text/csv');
+}
+function dl(name,content,type){const b=new Blob([content],{type});const a=document.createElement('a');
+  a.href=URL.createObjectURL(b);a.download=name;a.click();URL.revokeObjectURL(a.href);}
+
+/* 雲端收集區後端（修正版，與模擬驗證一致） */
+function gesc(s){return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
+function buildBackend(){
+  const hM=['時間戳記','學號','組別','資訊背景',...QLIST.map(q=>q.key)].map(h=>"'"+gesc(h)+"'").join(',');
+  const hG=['時間戳記','學號','組別',...QLIST.map(q=>q.key)].map(h=>"'"+gesc(h)+"'").join(',');
+  return [
+"/** 4C 學習成效評量｜雲端資料收集區後端 (Google Apps Script Web App) — 總表＋分類分頁版 v2",
+" *  ‧『收集區』總表：所有作答，分類以「資訊背景」欄位記錄（含 bg 欄，共 "+(4+N)+" 欄）",
+" *  ‧『資訊相關／非資訊相關／未分類』分頁：同筆同時鏡射（無 bg 欄，共 "+(3+N)+" 欄）",
+" *  ‧ 寫入前會自動「對齊標頭」，避免舊版殘留標頭導致欄位錯位；doGet 只讀總表，不重複計算",
+" *  ▶ 若欄位已錯位（混到舊資料）：在編輯器執行一次 reset() 清空舊資料並重建正確標頭",
+" *  1) 編輯器先「執行」一次 setup()（或 reset()）：授權並建立試算表「4C評量收集區」",
+" *  2) 部署 → 新增部署作業 → 網頁應用程式；執行身分＝我；誰可以存取＝任何人",
+" *  3) 複製 /exec 網址貼到前端 COLLECT_URL；改程式後需以『新版本』重新部署 */",
+"var MASTER='收集區';",
+"var FILE_NAME='4C評量收集區';",
+"var N="+N+";",
+"var GROUPS=['資訊相關','非資訊相關','未分類'];",
+"var HEADERS_M=["+hM+"];   // 總表：含資訊背景欄",
+"var HEADERS_G=["+hG+"];   // 分類分頁：不含資訊背景欄",
+"",
+"function setup(){",
+"  ensureSheet_(MASTER, HEADERS_M);",
+"  for(var i=0;i<GROUPS.length;i++){ ensureSheet_(GROUPS[i], HEADERS_G); }",
+"  var url=getSS_().getUrl();",
+"  Logger.log('✅ 試算表已就緒，請保留此網址：'+url);",
+"  return url;",
+"}",
+"",
+"/** 清空所有舊資料並重建正確標頭（解決欄位錯位／混格式） */",
+"function reset(){",
+"  var ss=getSS_();",
+"  var targets=[[MASTER,HEADERS_M]];",
+"  for(var i=0;i<GROUPS.length;i++){ targets.push([GROUPS[i],HEADERS_G]); }",
+"  for(var t=0;t<targets.length;t++){",
+"    var name=targets[t][0], headers=targets[t][1];",
+"    var sh=ss.getSheetByName(name); if(!sh){ sh=ss.insertSheet(name); }",
+"    sh.clearContents();",
+"    sh.getRange(1,1,1,headers.length).setValues([headers]);",
+"  }",
+"  var url=ss.getUrl();",
+"  Logger.log('✅ 已清空舊資料並重建對齊標頭：'+url);",
+"  return url;",
+"}",
+"",
+"function getSS_(){",
+"  var props=PropertiesService.getScriptProperties();",
+"  var id=props.getProperty('SS_ID');",
+"  if(id){ try{ return SpreadsheetApp.openById(id); }catch(e){} }",
+"  var ss=SpreadsheetApp.getActiveSpreadsheet();",
+"  if(!ss){ ss=SpreadsheetApp.create(FILE_NAME); }",
+"  props.setProperty('SS_ID', ss.getId());",
+"  return ss;",
+"}",
+"",
+"function groupName_(bg){ return (bg==='資訊相關' || bg==='非資訊相關') ? bg : '未分類'; }",
+"",
+"/** 取得工作表，並確保第 1 列為正確且完整的標頭（修復舊版殘留標頭） */",
+"function ensureSheet_(name, headers){",
+"  var ss=getSS_();",
+"  var sh=ss.getSheetByName(name);",
+"  if(!sh){ sh=ss.insertSheet(name); }",
+"  var width=headers.length, needFix=true;",
+"  if(sh.getLastRow()>=1){",
+"    var cur=sh.getRange(1,1,1,width).getValues()[0];",
+"    needFix=false;",
+"    for(var i=0;i<width;i++){ if(String(cur[i])!==String(headers[i])){ needFix=true; break; } }",
+"  }",
+"  if(needFix){ sh.getRange(1,1,1,width).setValues([headers]); }",
+"  return sh;",
+"}",
+"",
+"function doPost(e){",
+"  var lock=LockService.getScriptLock();",
+"  try{",
+"    lock.waitLock(20000);",
+"    if(!e || !e.postData || !e.postData.contents){ return out_({ok:false,error:'no body'}); }",
+"    var data=JSON.parse(e.postData.contents);",
+"    var g=groupName_(data.bg);",
+"    var sc=data.scores || [];",
+"    var svals=[]; for(var i=0;i<N;i++){ svals.push( (sc[i]===undefined || sc[i]===null) ? '' : sc[i] ); }",
+"    var head=[ data.ts || new Date(), data.sid || '', data.group || '' ];",
+"    // 總表（含資訊背景欄）",
+"    var m=ensureSheet_(MASTER, HEADERS_M);",
+"    m.appendRow( head.concat([g]).concat(svals) );",
+"    // 分類分頁（不含資訊背景欄）",
+"    ensureSheet_(g, HEADERS_G).appendRow( head.concat(svals) );",
+"    return out_({ok:true, group:g, count: m.getLastRow()-1});",
+"  }catch(err){ return out_({ok:false, error:String(err)}); }",
+"  finally{ try{ lock.releaseLock(); }catch(e2){} }",
+"}",
+"",
+"function doGet(e){",
+"  var sh=ensureSheet_(MASTER, HEADERS_M);",
+"  var arr=[];",
+"  var last=sh.getLastRow();",
+"  if(last>1){",
+"    var vals=sh.getRange(2,1,last-1,4+N).getValues();",
+"    for(var r=0;r<vals.length;r++){",
+"      var row=vals[r];",
+"      arr.push({ ts:String(row[0]), sid:String(row[1]), group:String(row[2]), bg:String(row[3]), scores: row.slice(4,4+N) });",
+"    }",
+"  }",
+"  return out_(arr);",
+"}",
+"",
+"function out_(obj){",
+"  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);",
+"}",
+""].join("\n");
+}
+function downloadBackend(){dl('4C收集區後端_總表加分頁版.gs',buildBackend(),'text/plain');msg('backendMsg','ok','✓ 已下載後端（總表＋分類分頁版），請先在 Apps Script 執行一次 setup() 再部署。');}
+function copyBackend(){navigator.clipboard.writeText(buildBackend()).then(()=>msg('backendMsg','ok','✓ 後端腳本已複製。'),()=>msg('backendMsg','err','複製失敗，請改用下載。'));}
+function msg(id,cls,txt){const e=document.getElementById(id);if(e)e.innerHTML=`<div class="notice ${cls}">${txt}</div>`;}
+function toast(t){const el=document.getElementById('toast');el.textContent=t;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),1600);}
+
+/* CSV 匯入 */
+function parseCSV(text){const rows=[];let row=[],cur='',q=false;text=text.replace(/^\ufeff/,'').replace(/\r/g,'');
+  for(let i=0;i<text.length;i++){const ch=text[i];
+    if(q){if(ch==='"'){if(text[i+1]==='"'){cur+='"';i++;}else q=false;}else cur+=ch;}
+    else{if(ch==='"')q=true;else if(ch===','){row.push(cur);cur='';}
+      else if(ch==='\n'){row.push(cur);rows.push(row);row=[];cur='';}else cur+=ch;}}
+  if(cur.length||row.length){row.push(cur);rows.push(row);}
+  return rows.filter(r=>r.some(c=>c.trim()!==''));}
+function norm(s){return (s||'').replace(/[\s,.，。、：:；;！!？?「」『』（）()\/\-_'"]/g,'').trim();}
+function importCSV(text){
+  const rows=parseCSV(text);if(rows.length<2){msg('dataMsg','err','✗ 資料不足。');return;}
+  const header=rows[0].map(norm);
+  // 對應每題欄位：先文字、後位置
+  const map=QLIST.map(qq=>{const t=norm(qq.key);let idx=header.findIndex(h=>h===t);
+    if(idx<0)idx=header.findIndex(h=>h.includes(t.slice(0,12))&&t.length>12);return idx;});
+  const matched=map.filter(x=>x>=0).length;let usePos=false,base=1;
+  // 找學號/組別/資訊背景欄
+  let sidCol=header.findIndex(h=>h.includes('學號')||h.toLowerCase().includes('sid'));
+  let grpCol=header.findIndex(h=>h.includes('組別')||h.includes('組'));
+  let bgCol=header.findIndex(h=>h.includes('資訊背景')||h==='背景'||h.includes('背景分類'));
+  if(matched<N*0.6){usePos=true;
+    // 前置欄位數：時間/學號/組別/資訊背景
+    base=header.length>=N+4?4:(header.length>=N+3?3:(header.length>=N+1?1:0));
+    if(base===4&&bgCol<0)bgCol=3;
+    for(let i=0;i<N;i++)map[i]=base+i;}
+  let add=0;
+  for(let r=1;r<rows.length;r++){const row=rows[r];const scores=[];let got=0;
+    QLIST.forEach((qq,qi)=>{const ci=map[qi];let v=NaN;if(ci>=0&&ci<row.length)v=parseFloat(String(row[ci]).trim());
+      if(!isNaN(v)&&v>=1&&v<=5){scores.push(v);got++;}else scores.push('');});
+    if(got>=8){DATA.push({id:uid(),ts:(row[0]||now()),sid:(sidCol>=0?row[sidCol]:''),group:(grpCol>=0?row[grpCol]:''),bg:(bgCol>=0&&bgCol<row.length?String(row[bgCol]).trim():''),scores});add++;}}
+  if(!add){msg('dataMsg','err','✗ 無法擷取有效分數，請確認為 1–5 數值或下載匯出的 CSV 格式對照。');return;}
+  refresh();msg('dataMsg','ok',`✓ 已匯入 ${add} 筆（對應：${usePos?'依欄位順序':'依題目文字'}），資料區現有 ${DATA.length} 筆。`);
+}
+document.getElementById('cfile').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;
+  const rd=new FileReader();rd.onload=ev=>importCSV(ev.target.result);rd.readAsText(f,'UTF-8');e.target.value='';});
+document.getElementById('jfile').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;
+  const rd=new FileReader();rd.onload=ev=>{try{const arr=JSON.parse(ev.target.result);if(!Array.isArray(arr))throw 0;
+    let add=0;arr.forEach(r=>{if(r&&Array.isArray(r.scores)){if(!r.id)r.id=uid();if(!r.ts)r.ts=now();DATA.push(r);add++;}});
+    refresh();msg('dataMsg','ok',`✓ 已匯入 ${add} 筆 JSON，資料區現有 ${DATA.length} 筆。`);}
+    catch(err){msg('dataMsg','err','✗ JSON 格式錯誤，請使用本系統匯出的檔案。');}};
+  rd.readAsText(f,'UTF-8');e.target.value='';});
+
+/* 示範資料 */
+function loadDemo(){
+  const base={mind_crit:4.3,mind_comm:4.0,mind_collab:4.4,mind_create:4.1,ipo_crit:3.9,ipo_comm:3.7,ipo_collab:4.0,ipo_create:3.6,py_crit:3.4,py_comm:3.5,py_collab:3.8,py_create:3.3};
+  const tb=[4.2,4.3,3.9,4.0],rnd=()=>Math.random();
+  for(let s=0;s<30;s++){const scores=QLIST.map(qq=>{let mn=qq.type==='m'?base[qq.dim+'_'+qq.comp]:tb[qq.idx];
+    let v=Math.round(mn+(rnd()+rnd()+rnd()-1.5)*0.9);return Math.max(1,Math.min(5,v));});
+    DATA.push({id:uid(),ts:'2025/06/0'+((s%7)+1)+' '+(9+s%8)+':00:00',sid:'(示範)'+(s+1),group:'示範第'+((s%6)+1)+'組',bg:(s%5<3?'資訊相關':'非資訊相關'),scores});}
+  refresh();msg('dataMsg','ok',`✓ 已載入 30 筆示範資料，資料區現有 ${DATA.length} 筆。`);
+}
+
+/* ====== 統計 ====== */
+let STAT={};
+function compute(){
+  if(!DATA.length){
+    ['statsEmpty','reportEmpty'].forEach(i=>document.getElementById(i).style.display='block');
+    ['statsContent','reportContent'].forEach(i=>document.getElementById(i).style.display='none');return;}
+  const cell={};DIMS.forEach(d=>COMPS.forEach(c=>{const a=cellArr(d.id,c.id);cell[d.id+'_'+c.id]={m:mean(a),sd:sd(a),n:a.filter(x=>!isNaN(x)).length};}));
+  const dimAvg={};DIMS.forEach(d=>{let all=[];COMPS.forEach(c=>all=all.concat(cellArr(d.id,c.id)));dimAvg[d.id]=mean(all);});
+  const compAvg={};COMPS.forEach(c=>{let all=[];DIMS.forEach(d=>all=all.concat(cellArr(d.id,c.id)));compAvg[c.id]=mean(all);});
+  let allM=[];DIMS.forEach(d=>COMPS.forEach(c=>allM=allM.concat(cellArr(d.id,c.id))));const overall=mean(allM);
+  const tArr=[0,1,2,3].map(i=>teachArr(i));const teach=tArr.map(a=>({m:mean(a),sd:sd(a)}));const teachAvg=mean([].concat(...tArr));
+  const itemVars=DIMS.flatMap(d=>COMPS.map(c=>variance(cellArr(d.id,c.id))));
+  const totals=DATA.map(r=>{let s=0,ok=true;DIMS.forEach(d=>COMPS.forEach(c=>{const v=val(r,QIDX[d.id+'_'+c.id]);if(isNaN(v))ok=false;else s+=v;}));return ok?s:NaN;});
+  const k=12,sumVar=itemVars.reduce((a,b)=>a+b,0),totVar=variance(totals);
+  const alpha=totVar>0?(k/(k-1))*(1-sumVar/totVar):NaN;
+  STAT={cell,dimAvg,compAvg,overall,teach,teachAvg,alpha,n:DATA.length};
+  renderStats();renderTrend();renderReport();
+}
+function scoreColor(v){if(isNaN(v))return '#9CA3AF';
+  const st=[[1,[220,38,38]],[3,[245,158,11]],[4,[132,204,22]],[5,[22,163,74]]];let lo=st[0],hi=st[st.length-1];
+  for(let i=0;i<st.length-1;i++){if(v>=st[i][0]&&v<=st[i+1][0]){lo=st[i];hi=st[i+1];break;}}
+  const t=(v-lo[0])/((hi[0]-lo[0])||1),c=lo[1].map((x,i)=>Math.round(x+(hi[1][i]-x)*t));return `rgb(${c[0]},${c[1]},${c[2]})`;}
+function band(v){if(v>=4.5)return['優異','#16A34A'];if(v>=4.0)return['良好','#65A30D'];if(v>=3.5)return['尚可','#F59E0B'];if(v>=3.0)return['待加強','#EA580C'];return['需重點改善','#DC2626'];}
+function alphaBand(a){if(isNaN(a))return '';if(a>=0.8)return['優良','#16A34A'];if(a>=0.7)return['可接受','#65A30D'];if(a>=0.6)return['尚可','#F59E0B'];return['偏低','#DC2626'];}
+function alphaTxt(a){if(isNaN(a))return '樣本不足';if(a>=0.8)return '內部一致性優良';if(a>=0.7)return '內部一致性可接受';if(a>=0.6)return '內部一致性尚可';return '內部一致性偏低，建議擴增樣本';}
+function barRow(label,v){const pct=isNaN(v)?0:v/5*100,c=scoreColor(v);
+  return `<div style="margin-bottom:11px"><div class="bar-label"><span>${label}</span><b>${isNaN(v)?'–':v.toFixed(2)}</b></div>
+    <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${c}">${isNaN(v)?'':v.toFixed(1)}</div></div></div>`;}
+function kpi(lab,val,b){let pill='';if(Array.isArray(b))pill=`<span class="pill" style="background:${b[1]}22;color:${b[1]}">${b[0]}</span>`;
+  return `<div class="kpi"><div class="lab">${lab}</div><div class="val">${val}</div>${pill}</div>`;}
+
+function renderStats(){
+  document.getElementById('statsEmpty').style.display='none';document.getElementById('statsContent').style.display='block';
+  const ov=STAT.overall,a=isNaN(STAT.alpha)?'—':STAT.alpha.toFixed(2);
+  document.getElementById('kpiGrid').innerHTML=
+    kpi('資料區作答數',STAT.n+'<small> 筆</small>','')+kpi('整體 4C 平均',ov.toFixed(2)+'<small> /5</small>',band(ov))
+    +kpi('教學成效平均',STAT.teachAvg.toFixed(2)+'<small> /5</small>',band(STAT.teachAvg))+kpi('信度 Cronbach α',a,alphaBand(STAT.alpha));
+  // 熱力圖
+  let h='<div style="overflow:auto"><table style="min-width:560px"><tr><th></th>';
+  COMPS.forEach(c=>h+=`<th class="num">${c.name}<br><span style="font-weight:400;color:var(--mute);font-size:11px">${c.en}</span></th>`);
+  h+='<th class="num">面向均</th></tr>';
+  DIMS.forEach(d=>{h+=`<tr><td><span class="chip ${d.cls}">${d.name}</span></td>`;
+    COMPS.forEach(c=>{const v=STAT.cell[d.id+'_'+c.id].m;h+=`<td><div class="heat-cell" style="background:${scoreColor(v)}">${v.toFixed(2)}<small>${band(v)[0]}</small></div></td>`;});
+    const dv=STAT.dimAvg[d.id];h+=`<td><div class="heat-cell" style="background:${scoreColor(dv)};outline:2px solid #00000022">${dv.toFixed(2)}</div></td></tr>`;});
+  h+='<tr><td><b>能力均</b></td>';COMPS.forEach(c=>{const cv=STAT.compAvg[c.id];h+=`<td><div class="heat-cell" style="background:${scoreColor(cv)};outline:2px solid #00000022">${cv.toFixed(2)}</div></td>`;});
+  h+=`<td><div class="heat-cell" style="background:${scoreColor(STAT.overall)};outline:3px solid #1E3A8A">${STAT.overall.toFixed(2)}</div></td></tr></table></div>`;
+  document.getElementById('heatmap').innerHTML=h;
+  renderBgCompare();
+  renderRadar();
+  document.getElementById('dimBars').innerHTML=DIMS.map(d=>barRow(d.name,STAT.dimAvg[d.id])).join('');
+  document.getElementById('compBars').innerHTML=COMPS.map(c=>barRow(c.name,STAT.compAvg[c.id])).join('');
+  document.getElementById('teachBars').innerHTML=TEACH.map((q,i)=>barRow('T'+(i+1)+'　'+teachLabel(i),STAT.teach[i].m)).join('');
+  let dt='<tr><th>面向</th><th>4C 能力</th><th class="num">M</th><th class="num">SD</th><th class="num">n</th><th>水準</th></tr>';
+  DIMS.forEach(d=>COMPS.forEach(c=>{const x=STAT.cell[d.id+'_'+c.id],b=band(x.m);
+    dt+=`<tr><td><span class="chip ${d.cls}">${d.name}</span></td><td>${c.name}</td><td class="num"><b>${x.m.toFixed(2)}</b></td><td class="num">${x.sd.toFixed(2)}</td><td class="num">${x.n}</td><td><span style="color:${b[1]};font-weight:700">${b[0]}</span></td></tr>`;}));
+  document.getElementById('detailTable').innerHTML=dt;
+  document.getElementById('alphaBox').innerHTML=`📐 <b>量表信度</b>：12 題 4C 量表 Cronbach α = <b>${a}</b>（${alphaTxt(STAT.alpha)}）。α ≥ 0.7 通常視為具可接受的內部一致性。`;
+}
+function teachLabel(i){return['四步驟教學有助學習','講解示範清楚','提升解決問題能力','願意推薦課程'][i];}
+
+/* 資訊背景分組比較 */
+function grpStat(recs){
+  const ov=mean(recs.map(ovOf));
+  return {n:recs.length,ov,mind:mean(recs.map(r=>dimOf(r,'mind'))),ipo:mean(recs.map(r=>dimOf(r,'ipo'))),py:mean(recs.map(r=>dimOf(r,'py'))),
+    teach:mean(recs.flatMap(r=>[0,1,2,3].map(i=>val(r,QIDX['t'+i]))))};
+}
+function renderBgCompare(){
+  const groups=[['資訊相關',DATA.filter(r=>r.bg==='資訊相關')],['非資訊相關',DATA.filter(r=>r.bg==='非資訊相關')],['未分類',DATA.filter(r=>!r.bg||(r.bg!=='資訊相關'&&r.bg!=='非資訊相關'))]];
+  const active=groups.filter(g=>g[1].length>0);
+  let h='<tr><th>資訊背景</th><th class="num">n</th><th class="num">整體4C</th><th class="num">心智圖</th><th class="num">IPO</th><th class="num">Python</th><th class="num">教學成效</th></tr>';
+  active.forEach(([name,recs])=>{const s=grpStat(recs);
+    h+=`<tr><td><b>${name}</b></td><td class="num">${s.n}</td><td class="num"><b>${isNaN(s.ov)?'–':s.ov.toFixed(2)}</b></td>
+      <td class="num">${isNaN(s.mind)?'–':s.mind.toFixed(2)}</td><td class="num">${isNaN(s.ipo)?'–':s.ipo.toFixed(2)}</td>
+      <td class="num">${isNaN(s.py)?'–':s.py.toFixed(2)}</td><td class="num">${isNaN(s.teach)?'–':s.teach.toFixed(2)}</td></tr>`;});
+  document.getElementById('bgTable').innerHTML=h;
+  // 兩主分組長條對比（整體4C＋三面向）
+  const gi=DATA.filter(r=>r.bg==='資訊相關'),gn=DATA.filter(r=>r.bg==='非資訊相關');
+  if(gi.length&&gn.length){
+    const si=grpStat(gi),sn=grpStat(gn);
+    const rows=[['整體4C','ov'],['心智圖','mind'],['IPO','ipo'],['Python','py'],['教學成效','teach']];
+    let b='';
+    rows.forEach(([lab,k])=>{
+      b+=`<div style="margin-bottom:10px"><div class="bar-label"><span>${lab}</span>
+        <span><b style="color:var(--c-mind)">資訊 ${si[k].toFixed(2)}</b>　vs　<b style="color:var(--c-py)">非資訊 ${sn[k].toFixed(2)}</b></span></div>
+        <div style="display:flex;gap:6px">
+          <div class="bar-track" style="flex:1"><div class="bar-fill" style="width:${si[k]/5*100}%;background:var(--c-mind)">${si[k].toFixed(1)}</div></div>
+          <div class="bar-track" style="flex:1"><div class="bar-fill" style="width:${sn[k]/5*100}%;background:var(--c-py)">${sn[k].toFixed(1)}</div></div>
+        </div></div>`;});
+    document.getElementById('bgBars').innerHTML=b;
+    const d=si.ov-sn.ov,lead=d>0?'資訊相關':'非資訊相關';
+    document.getElementById('bgNote').innerHTML=`📊 整體 4C：資訊相關 <b>${si.ov.toFixed(2)}</b>（n=${si.n}）、非資訊相關 <b>${sn.ov.toFixed(2)}</b>（n=${sn.n}），`
+      +`差距 <b>${Math.abs(d).toFixed(2)}</b> 分${Math.abs(d)<0.05?'，兩組相當':'，由「'+lead+'」較高'}。${Math.abs(d)>0.5?' 落差偏大，建議針對較弱背景組調整教學鷹架與輔助資源。':''}`;
+  }else{
+    document.getElementById('bgBars').innerHTML='';
+    document.getElementById('bgNote').innerHTML='ℹ️ 需同時有「資訊相關」與「非資訊相關」兩組資料，才會顯示對比長條與差距分析。請於作答時選擇資訊背景。';
+  }
+}
+
+function renderRadar(){
+  const W=360,H=320,cx=W/2,cy=H/2+6,R=110,vals=COMPS.map(c=>STAT.compAvg[c.id]);
+  const ang=i=>(-90+i*90)*Math.PI/180,pt=(i,r)=>[cx+r*Math.cos(ang(i)),cy+r*Math.sin(ang(i))];
+  let svg=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto">`;
+  for(let g=1;g<=5;g++){const rr=R*g/5;let p='';for(let i=0;i<4;i++){const[x,y]=pt(i,rr);p+=(i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1);}p+='Z';svg+=`<path d="${p}" fill="none" stroke="#E5E7EB"/>`;}
+  for(let i=0;i<4;i++){const[x,y]=pt(i,R);svg+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#D1D5DB"/>`;
+    const[lx,ly]=pt(i,R+26);svg+=`<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle" font-size="13" font-weight="700" fill="#1E3A8A">${COMPS[i].name}</text><text x="${lx}" y="${ly+15}" text-anchor="middle" font-size="13" fill="#3B82F6" font-weight="700">${vals[i].toFixed(2)}</text>`;}
+  let dp='';for(let i=0;i<4;i++){const[x,y]=pt(i,R*vals[i]/5);dp+=(i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1);}dp+='Z';
+  svg+=`<path d="${dp}" fill="rgba(59,130,246,.22)" stroke="#3B82F6" stroke-width="2.5" stroke-linejoin="round"/>`;
+  for(let i=0;i<4;i++){const[x,y]=pt(i,R*vals[i]/5);svg+=`<circle cx="${x}" cy="${y}" r="4.5" fill="#1E3A8A"/>`;}
+  svg+='</svg>';document.getElementById('radar').innerHTML=svg;
+}
+
+/* 趨勢 */
+function tsKey(s){if(!s)return null;const d=new Date(String(s).replace(/-/g,'/'));return isNaN(d.getTime())?null:d.getTime();}
+function sortedData(){const arr=DATA.map((r,i)=>({r,i,t:tsKey(r.ts)}));const allT=arr.every(x=>x.t!==null);
+  arr.sort((a,b)=>allT?a.t-b.t:a.i-b.i);return arr.map(x=>x.r);}
+function renderTrend(){
+  if(!DATA.length)return;
+  const seq=sortedData(),n=seq.length;const sums={ov:0,mind:0,ipo:0,py:0},cum=[];
+  seq.forEach((r,k)=>{sums.ov+=ovOf(r);sums.mind+=dimOf(r,'mind');sums.ipo+=dimOf(r,'ipo');sums.py+=dimOf(r,'py');
+    cum.push({i:k+1,ov:sums.ov/(k+1),mind:sums.mind/(k+1),ipo:sums.ipo/(k+1),py:sums.py/(k+1)});});
+  document.getElementById('trendCount').innerHTML=lineChart([{name:'累積作答',color:'#1E3A8A',pts:cum.map(c=>[c.i,c.i])}],{xmax:n,ymin:0,ymax:Math.max(5,n),yInt:true,xlab:'第 N 筆作答'});
+  document.getElementById('trendAvg').innerHTML=lineChart([
+    {name:'整體4C',color:'#1E3A8A',pts:cum.map(c=>[c.i,c.ov])},{name:'心智圖',color:'#2563EB',pts:cum.map(c=>[c.i,c.mind])},
+    {name:'IPO',color:'#7C3AED',pts:cum.map(c=>[c.i,c.ipo])},{name:'Python',color:'#DB2777',pts:cum.map(c=>[c.i,c.py])}
+  ],{xmax:n,ymin:1,ymax:5,xlab:'第 N 筆作答'});
+  const segs=Math.min(6,n),size=Math.ceil(n/segs),rows=[];
+  for(let s=0;s<n;s+=size){const part=seq.slice(s,s+size);
+    rows.push({range:(s+1)+'–'+Math.min(s+size,n),n:part.length,ov:mean(part.map(ovOf)),mind:mean(part.map(r=>dimOf(r,'mind'))),ipo:mean(part.map(r=>dimOf(r,'ipo'))),py:mean(part.map(r=>dimOf(r,'py')))});}
+  let h='<tr><th>作答區段</th><th class="num">n</th><th class="num">整體4C</th><th class="num">心智圖</th><th class="num">IPO</th><th class="num">Python</th><th class="num">較前段</th></tr>';
+  rows.forEach((r,i)=>{let dl='—';if(i>0){const d=r.ov-rows[i-1].ov;dl=`<span class="${d>0.05?'delta-up':d<-0.05?'delta-dn':'delta-fl'}">${d>0.05?'▲':d<-0.05?'▼':'▬'} ${d>=0?'+':''}${d.toFixed(2)}</span>`;}
+    h+=`<tr><td>${r.range}</td><td class="num">${r.n}</td><td class="num"><b>${r.ov.toFixed(2)}</b></td><td class="num">${r.mind.toFixed(2)}</td><td class="num">${r.ipo.toFixed(2)}</td><td class="num">${r.py.toFixed(2)}</td><td class="num">${dl}</td></tr>`;});
+  document.getElementById('trendTable').innerHTML=h;
+}
+function lineChart(series,opt){
+  const W=440,H=240,pl=44,pr=14,pt=14,pb=34,xmax=opt.xmax||1,xmin=1,ymin=opt.ymin||0,ymax=opt.ymax||5;
+  const X=v=>pl+(xmax<=xmin?0:(v-xmin)/(xmax-xmin))*(W-pl-pr),Y=v=>H-pb-((v-ymin)/((ymax-ymin)||1))*(H-pt-pb);
+  let svg=`<svg viewBox="0 0 ${W} ${H}" class="trend-svg">`;
+  const steps=opt.yInt?Math.min(5,ymax):4;
+  for(let g=0;g<=steps;g++){const yv=ymin+(ymax-ymin)*g/steps,y=Y(yv);
+    svg+=`<line x1="${pl}" y1="${y.toFixed(1)}" x2="${W-pr}" y2="${y.toFixed(1)}" stroke="#EEF1F5"/><text x="${pl-6}" y="${(y+3).toFixed(1)}" text-anchor="end" font-size="10" fill="#9CA3AF">${opt.yInt?Math.round(yv):yv.toFixed(1)}</text>`;}
+  svg+=`<text x="${(pl+W-pr)/2}" y="${H-6}" text-anchor="middle" font-size="11" fill="#6B7280">${opt.xlab||''}</text>`;
+  svg+=`<text x="${pl}" y="${H-pb+14}" text-anchor="middle" font-size="10" fill="#9CA3AF">1</text><text x="${W-pr}" y="${H-pb+14}" text-anchor="middle" font-size="10" fill="#9CA3AF">${xmax}</text>`;
+  series.forEach(s=>{if(!s.pts.length)return;let dp=s.pts.map((p,i)=>(i?'L':'M')+X(p[0]).toFixed(1)+' '+Y(p[1]).toFixed(1)).join(' ');
+    svg+=`<path d="${dp}" fill="none" stroke="${s.color}" stroke-width="2.2" stroke-linejoin="round"/>`;const last=s.pts[s.pts.length-1];
+    svg+=`<circle cx="${X(last[0]).toFixed(1)}" cy="${Y(last[1]).toFixed(1)}" r="3.5" fill="${s.color}"/>`;});
+  let lx=pl,ly=pt+2;series.forEach(s=>{svg+=`<rect x="${lx}" y="${ly-7}" width="9" height="9" rx="2" fill="${s.color}"/><text x="${lx+13}" y="${ly+1}" font-size="10" fill="#374151">${s.name}</text>`;lx+=s.name.length*12+34;if(lx>W-80){lx=pl;ly+=14;}});
+  svg+='</svg>';return svg;
+}
+
+/* ====== 報告 ====== */
+function renderReport(){
+  document.getElementById('reportEmpty').style.display='none';document.getElementById('reportContent').style.display='block';
+  const ov=STAT.overall,b=band(ov);
+  document.getElementById('gradeBanner').style.background=`linear-gradient(135deg,${b[1]},${shade(b[1])})`;
+  document.getElementById('gradeBanner').innerHTML=`<div><div style="font-size:13px;opacity:.9;font-weight:700;letter-spacing:1px">整體學習成效等第</div><div class="g">${b[0]}</div></div>
+    <div class="d">整體 4C 平均 <b>${ov.toFixed(2)}</b>，教學成效平均 <b>${STAT.teachAvg.toFixed(2)}</b>，共 ${STAT.n} 筆。${gradeNote(ov)}</div>`;
+  const cells=[];DIMS.forEach(d=>COMPS.forEach(c=>cells.push({d,c,k:d.id+'_'+c.id,m:STAT.cell[d.id+'_'+c.id].m})));cells.sort((a,b)=>a.m-b.m);
+  const low=cells[0],high=cells[cells.length-1];
+  const dimArr=DIMS.map(d=>({d,m:STAT.dimAvg[d.id]})).sort((a,b)=>a.m-b.m);
+  const compArr=COMPS.map(c=>({c,m:STAT.compAvg[c.id]})).sort((a,b)=>a.m-b.m);
+  let f='';
+  f+=find('good','▲',`最強項：${high.d.name} × ${high.c.name}`,`平均 ${high.m.toFixed(2)} 分，可作為教學示範與同儕分享標竿。`);
+  f+=find('bad','▼',`最弱項：${low.d.name} × ${low.c.name}`,`平均 ${low.m.toFixed(2)} 分，最需優先強化（見下方建議）。`);
+  f+=find(dimArr[0].m<3.8?'mid':'good','◆',`面向落差：最弱「${dimArr[0].d.name}」(${dimArr[0].m.toFixed(2)})、最強「${dimArr[dimArr.length-1].d.name}」(${dimArr[dimArr.length-1].m.toFixed(2)})`,`落差 ${(dimArr[dimArr.length-1].m-dimArr[0].m).toFixed(2)} 分。${dimArr[dimArr.length-1].m-dimArr[0].m>0.6?'落差偏大，建議調整各階段教學時數。':'分布相對均衡。'}`);
+  f+=find(compArr[0].m<3.8?'mid':'good','◆',`4C 落差：最弱「${compArr[0].c.name}」(${compArr[0].m.toFixed(2)})、最強「${compArr[compArr.length-1].c.name}」(${compArr[compArr.length-1].m.toFixed(2)})`,`跨三面向綜合表現，可作能力培養重點依據。`);
+  const tBad=STAT.teach.map((x,i)=>({i,m:x.m})).sort((a,b)=>a.m-b.m)[0];
+  f+=find(STAT.teachAvg>=3.8?'good':'mid','★',`教學成效：平均 ${STAT.teachAvg.toFixed(2)} 分`,`相對較低題項為「${teachLabel(tBad.i)}」(${tBad.m.toFixed(2)})。`);
+  document.getElementById('findings').innerHTML=f;
+  const weak=cells.filter(x=>x.m<3.8).sort((a,b)=>a.m-b.m);let r='';
+  if(!weak.length)r=`<div class="notice ok">✓ 所有能力格均達 3.8 分以上，整體成效良好。建議維持現行設計，並推廣最強項（${high.d.name}×${high.c.name}）的教學策略。</div>`;
+  else weak.forEach((w,i)=>{const b2=band(w.m);
+    r+=`<div class="rec"><b>建議 ${i+1}　${w.d.name} × ${w.c.name}</b><div class="meta">目前平均 <b style="color:${b2[1]}">${w.m.toFixed(2)}</b>（${b2[0]}）· SD ${STAT.cell[w.k].sd.toFixed(2)}</div><p>${RECMAP[w.k]}</p></div>`;});
+  if(tBad.m<3.8){const tips=['檢視四步驟（心智圖→IPO→Python→應用模擬）的時間配比與銜接，於難度陡升處增加鷹架。','增加實作示範與即時答疑，並錄製講解供課後複習。','導入更多真實情境的開放式問題，強化問題解決遷移。','蒐集質性回饋了解學生期待，調整課程節奏。'][tBad.i];
+    r+=`<div class="rec" style="border-left-color:#1E3A8A"><b>教學設計建議　${teachLabel(tBad.i)}</b><div class="meta">此題平均 ${tBad.m.toFixed(2)} 分</div><p>${tips}</p></div>`;}
+  document.getElementById('recs').innerHTML=r;
+}
+function find(cls,ic,t,d){return `<div class="find ${cls}"><div class="ic">${ic}</div><div class="tx"><b>${t}</b><span>${d}</span></div></div>`;}
+function gradeNote(v){if(v>=4.5)return '整體達優異水準。';if(v>=4.0)return '整體表現良好，少數組合可再精進。';if(v>=3.5)return '整體尚可，建議補強弱項。';if(v>=3.0)return '多項待加強，建議檢討教學策略。';return '整體偏低，建議全面檢視課程設計。';}
+function shade(hex){const c=hex.replace('#',''),n=parseInt(c,16);let r=Math.max(0,(n>>16)-30),g=Math.max(0,((n>>8)&255)-30),b=Math.max(0,(n&255)-30);return `rgb(${r},${g},${b})`;}
+
+/* ====== 學習導覽 ====== */
+const DIM_GUIDE={
+  mind:{intro:'以心智圖發散與收斂專題構想，釐清核心問題與分支關係。',c4:['批判思考','創新創造','溝通協調'],
+    tools:[{name:'Coggle',url:'https://coggle.it/',desc:'免費線上協作心智圖，可多人即時共編'},{name:'XMind',url:'https://xmind.app/',desc:'跨平台心智圖軟體，模板豐富'},{name:'Whimsical',url:'https://whimsical.com/',desc:'簡潔的心智圖與流程圖工具'},{name:'Miro',url:'https://miro.com/',desc:'線上白板，適合腦力激盪'}]},
+  ipo:{intro:'以 Input–Process–Output 拆解系統運作，辨識資料流與處理邏輯。',c4:['批判思考','溝通協調','團隊合作'],
+    tools:[{name:'draw.io',url:'https://app.diagrams.net/',desc:'免費繪製 IPO 圖與流程圖'},{name:'Excalidraw',url:'https://excalidraw.com/',desc:'手繪風白板，快速畫草圖'},{name:'Mermaid Live',url:'https://mermaid.live/',desc:'用文字語法產生流程圖'},{name:'Lucidchart',url:'https://www.lucidchart.com/',desc:'專業流程圖與系統架構圖'}]},
+  py:{intro:'將 IPO 邏輯轉為 Python 程式，實作、除錯與整合。',c4:['批判思考','創新創造','團隊合作'],
+    tools:[{name:'Google Colab',url:'https://colab.research.google.com/',desc:'雲端 Jupyter，免安裝執行 Python'},{name:'Python Tutor',url:'https://pythontutor.com/',desc:'逐步視覺化程式執行流程'},{name:'Replit',url:'https://replit.com/',desc:'線上 IDE，支援協作'},{name:'Thonny',url:'https://thonny.org/',desc:'初學者友善的 Python IDE'}]}
+};
+/* 只有「單一影片」可內嵌；頻道／播放清單一律用連結卡（避免播放器錯誤 150/153） */
+function ytVideoId(url){
+  url=String(url||'').trim();if(!url)return null;
+  if(/\/channel\/|\/@|[?&]list=|\/c\/|\/user\//.test(url))return null;   // 非單一影片
+  const m=url.match(/(?:v=|youtu\.be\/|embed\/|shorts\/|live\/)([A-Za-z0-9_-]{11})/);
+  return m?m[1]:(/^[A-Za-z0-9_-]{11}$/.test(url)?url:null);
+}
+function videoBlock(url,title){
+  if(!url)return '';
+  const id=ytVideoId(url);
+  if(id)return `<div class="video-frame"><iframe src="https://www.youtube.com/embed/${id}" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`;
+  // 頻道／清單／無法內嵌 → 連結卡
+  return `<a class="yt-link" href="${url}" target="_blank" rel="noopener"><div class="yt-pl">▶</div>
+    <div class="yt-tx"><b>${esc(title||'在 YouTube 觀看')}</b><span>YouTube 頻道無法內嵌，點此前往觀看 ↗</span></div></a>`;
+}
+function renderGuide(){
+  // AI 賦能學習生態：平台卡片
+  document.getElementById('platGrid').innerHTML=COURSE_PLATFORMS.map(p=>{
+    const link=p.url?`<a class="go" href="${p.url}" target="_blank" rel="noopener">前往平台 ↗</a>`:`<span class="none">（待設定網址）</span>`;
+    return `<div class="plat${p.hot?' plat-hot':''}"><div class="nm">${p.icon||'🔗'} ${esc(p.name)}${p.hot?'<span class="hot-tag">AI 賦能</span>':''}</div><div class="ds">${esc(p.desc)}</div>${link}</div>`;}).join('');
+  // 課程教學頻道（連結卡，不內嵌以免播放器錯誤）
+  const chCard=document.getElementById('channelCard');
+  if(chCard){
+    chCard.innerHTML=`<h2><span class="bar"></span>🎬 課程教學頻道</h2>
+      <p class="sub">AI 賦能教學影音：示範與導引影片，支援學生課後自學。</p>
+      ${CHANNEL_URL?`<a class="yt-link big" href="${CHANNEL_URL}" target="_blank" rel="noopener"><div class="yt-pl">▶</div>
+        <div class="yt-tx"><b>前往 YouTube 教學頻道</b><span>觀看完整課程影音清單 ↗</span></div></a>`
+       :`<div class="notice info">尚未設定頻道網址（檔案頂端 CHANNEL_URL）。</div>`}`;
+  }
+  let h='';['mind','ipo','py'].forEach(id=>{const d=DIMS.find(x=>x.id===id),g=DIM_GUIDE[id],vid=DIM_VIDEO[id];
+    const vb=videoBlock(vid.url,vid.title);
+    h+=`<div class="card guide-dim"><div class="gh" style="background:${d.bg}"><div class="lt" style="color:${d.color}">${d.tag}　${d.name}</div>
+      <div class="c4">${g.c4.map(c=>`<span style="color:${d.color}">${c}</span>`).join('')}</div></div>
+      <div class="guide-body"><div class="desc">${esc(g.intro)}</div><h3 style="margin-top:0">推薦工具</h3>
+      <div class="tool-grid">${g.tools.map(t=>`<a class="tool" href="${t.url}" target="_blank" rel="noopener"><div class="tn">${esc(t.name)}<span class="ext">開啟 ↗</span></div><div class="td">${esc(t.desc)}</div></a>`).join('')}</div>
+      ${vb?`<h3>課程影片　${esc(vid.title)}</h3>${vb}`:''}</div></div>`;});
+  document.getElementById('guideDims').innerHTML=h;
+}
+function renderAiBanner(){
+  const el=document.getElementById('aiBannerCta');if(!el)return;
+  const p=COURSE_PLATFORMS[0];let h='';
+  if(p&&p.url)h+=`<a class="btn primary lg" href="${p.url}" target="_blank" rel="noopener">🤖 進入 AI 賦能學習平台</a>`;
+  if(CHANNEL_URL)h+=`<a class="btn glass lg" href="${CHANNEL_URL}" target="_blank" rel="noopener">🎬 課程教學頻道</a>`;
+  h+=`<button class="btn glass lg" onclick="go('guide')">🧭 學習導覽</button>`;
+  el.innerHTML=h;
+}
+
+/* ====== init ====== */
+renderQuiz();
+renderQuickGrid();
+renderGuide();
+renderAiBanner();
+updateConnBadges();
+if(isCloud()){
+  DATA=dbLoad();               // 先用本機快取避免空白
+  renderData();compute();refreshHome();
+  syncNow(true);               // 立即抓雲端收集區
+  startAuto();                 // 啟動自動更新
+}else{
+  DATA=dbLoad();
+  renderData();compute();refreshHome();
+}
+</script>
+</body>
+</html>
