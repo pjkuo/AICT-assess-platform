@@ -510,6 +510,11 @@ input.txt:focus{outline:none;border-color:var(--accent)}
     <div class="notice warn" id="hLiveNote" style="margin-top:12px"></div>
   </div>
   <div class="card">
+    <h2><span class="bar"></span>🔄 即時配對統計（4C · 現況）</h2>
+    <p class="sub">目前即時 4C 資料依「學號後 4 碼」配對之前後測效果量，隨作答/同步即時重算；與上方歷史基準分流，保有現況時效性。</p>
+    <div id="hLivePair"></div>
+  </div>
+  <div class="card">
     <h2><span class="bar"></span>⬇ 歷史整合資料下載</h2>
     <p class="sub">本分頁所用之運算思維前後測整合資料（已內嵌、清理並依學號配對），可匯出備份或另作分析。</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -1060,7 +1065,7 @@ let STAT={};
 function compute(){
   if(!DATA.length){
     ['statsEmpty','reportEmpty'].forEach(i=>document.getElementById(i).style.display='block');
-    ['statsContent','reportContent'].forEach(i=>document.getElementById(i).style.display='none');return;}
+    ['statsContent','reportContent'].forEach(i=>document.getElementById(i).style.display='none');renderLivePair();renderHistory();return;}
   const cell={};DIMS.forEach(d=>COMPS.forEach(c=>{const a=cellArr(d.id,c.id);cell[d.id+'_'+c.id]={m:mean(a),sd:sd(a),n:a.filter(x=>!isNaN(x)).length};}));
   const dimAvg={};DIMS.forEach(d=>{let all=[];COMPS.forEach(c=>all=all.concat(cellArr(d.id,c.id)));dimAvg[d.id]=mean(all);});
   const compAvg={};COMPS.forEach(c=>{let all=[];DIMS.forEach(d=>all=all.concat(cellArr(d.id,c.id)));compAvg[c.id]=mean(all);});
@@ -1074,7 +1079,7 @@ function compute(){
   else if(!isNaN(alphaPre)){alpha=alphaPre;alphaStage='前測';}
   else{alpha=cronbachAlpha(DATA);alphaStage='全部';}
   STAT={cell,dimAvg,compAvg,overall,teach,teachAvg,alpha,alphaPre,alphaPost,alphaStage,nPre:preRecs.length,nPost:postRecs.length,n:DATA.length};
-  renderStats();renderTrend();renderReport();
+  renderStats();renderTrend();renderReport();renderLivePair();renderHistory();
 }
 function scoreColor(v){if(isNaN(v))return '#9CA3AF';
   const st=[[1,[220,38,38]],[3,[245,158,11]],[4,[132,204,22]],[5,[22,163,74]]];let lo=st[0],hi=st[st.length-1];
@@ -1392,6 +1397,28 @@ function renderAiBanner(){
 
 /* ====== init ====== */
 /* 趨勢分析（歷史成效）— 使用內嵌 HISTORY，沿用統計引擎；不寫入即時 DATA */
+// 即時 4C 自身的前後測配對統計（依學號後4碼）— 反映現況
+function renderLivePair(){
+  const box=document.getElementById('hLivePair'); if(!box)return;
+  const fx=v=>isNaN(v)?'–':v.toFixed(2);
+  const ovs=pairedSeries(ovOf);
+  if(ovs.preArr.length<2){
+    const pre=DATA.filter(r=>r.stage==='前測').length,post=DATA.filter(r=>r.stage==='後測').length;
+    box.innerHTML=`<div class="notice info">即時資料尚無可配對之前後測（需同一學號後 4 碼同時有前測與後測）。目前即時：前測 ${pre} 筆、後測 ${post} 筆、可配對 <b>${ovs.preArr.length}</b> 人。</div>`;return;
+  }
+  const rows=[{name:'整體 4C',fn:ovOf,head:true}]
+    .concat(DIMS.map(d=>({name:d.name,fn:metricDim(d.id)})))
+    .concat(COMPS.map(c=>({name:c.name,fn:metricComp(c.id)})));
+  const res=rows.map(m=>{const s=pairedSeries(m.fn);return{name:m.name,head:m.head,...pairedTest(s.preArr,s.postArr)};});
+  const ov=res[0];
+  let h=`<div class="notice ${(!ov.insufficient&&ov.p<0.05)?'ok':'info'}">即時配對樣本（依學號後 4 碼，<b>${ov.n}</b> 位學生同時具前後測）：整體 4C 前測 <b>${fx(ov.mPre)}</b> → 後測 <b>${fx(ov.mPost)}</b>，增益 <b>${ov.md>=0?'+':''}${fx(ov.md)}</b>，d<sub>z</sub> = <b>${fx(ov.dz)}</b>（${isNaN(ov.dz)?'':dBand(ov.dz)[0]}）；配對 t(${ov.df}) = ${fx(ov.t)}，p ${fmtP(ov.p)}${sigStar(ov.p)}，95% CI [${fx(ov.ciLo)}, ${fx(ov.ciHi)}]。</div>`;
+  h+=`<div style="overflow:auto"><table style="min-width:640px"><tr><th>指標</th><th class="num">配對n</th><th class="num">前測M</th><th class="num">後測M</th><th class="num">增益</th><th class="num">95% CI</th><th class="num">d_z</th><th class="num">t(df)</th><th class="num">p</th></tr>`;
+  res.forEach(r=>{if(r.insufficient){h+=`<tr><td>${r.head?'<b>'+r.name+'</b>':r.name}</td><td class="num" colspan="8" style="color:var(--mute)">樣本不足</td></tr>`;return;}
+    const bd=dBand(r.dz);
+    h+=`<tr><td>${r.head?'<b>'+r.name+'</b>':r.name}</td><td class="num">${r.n}</td><td class="num">${fx(r.mPre)}</td><td class="num">${fx(r.mPost)}</td><td class="num"><b>${r.md>=0?'+':''}${fx(r.md)}</b></td><td class="num">[${fx(r.ciLo)}, ${fx(r.ciHi)}]</td><td class="num"><b style="color:${bd[1]}">${fx(r.dz)}</b></td><td class="num">${fx(r.t)} (${r.df})</td><td class="num">${fmtP(r.p)}${sigStar(r.p)}</td></tr>`;});
+  h+='</table></div><div class="tip" style="margin-top:8px">即時 4C 配對樣本 t 檢定（依學號後 4 碼配對）；d_z＝平均差/差值標準差；p 值由 t 分布精算。* p&lt;.05 ** p&lt;.01 *** p&lt;.001</div>';
+  box.innerHTML=h;
+}
 let mergeLive=false;
 function toggleMergeLive(){
   const live=DATA.filter(r=>r.stage==='前測'||r.stage==='後測').length;
