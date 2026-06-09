@@ -51,6 +51,7 @@ h3{font-size:15px;margin:16px 0 9px;font-weight:700}
 .notice.ok{background:#ECFDF5;color:#065F46;border:1px solid #A7F3D0}
 .notice.err{background:#FEF2F2;color:#991B1B;border:1px solid #FECACA}
 .notice.info{background:var(--bg-mind);color:var(--primary);border:1px solid #BFDBFE}
+.notice.warn{background:#FFFBEB;color:#92400E;border:1px solid #FDE68A}
 .tip{font-size:12px;color:var(--mute)}
 code.k{background:var(--bg-ipo);color:var(--c-ipo);padding:1px 6px;border-radius:5px;font-size:12px}
 table{width:100%;border-collapse:collapse;font-size:14px}
@@ -225,6 +226,7 @@ input.txt:focus{outline:none;border-color:var(--accent)}
   <div class="tab" data-tab="stats"><span class="n">④</span>即時統計</div>
   <div class="tab" data-tab="report"><span class="n">⑤</span>報告與建議</div>
   <div class="tab" data-tab="guide"><span class="n">⑥</span>學習導覽</div>
+  <div class="tab" data-tab="history"><span class="n">⑦</span>趨勢分析</div>
 </div></nav>
 
 <main class="wrap">
@@ -473,6 +475,35 @@ input.txt:focus{outline:none;border-color:var(--accent)}
   <div id="guideDims"></div>
 </section>
 
+<!-- 趨勢分析（歷史成效）-->
+<section class="panel" id="history">
+  <div class="ai-hero">
+    <div class="ai-badge">HISTORICAL TREND · 歷史成效</div>
+    <h2>📈 趨勢分析｜歷史學習成效</h2>
+    <p>整合「運算思維課程學習調查問卷」前測—後測歷史資料（已內嵌），依學號配對統計歷史成效與趨勢。此層為<b>歷史基準</b>，與上方「即時統計」分流——即時分析持續反映現況時效性。</p>
+  </div>
+  <div class="card"><h2><span class="bar"></span>歷史成效關鍵指標</h2><div class="kpi-grid" id="hKpi"></div>
+    <div class="notice info" id="hAlpha" style="margin-top:14px"></div></div>
+  <div class="card"><h2><span class="bar"></span>四構面前測 → 後測（配對樣本效果量）</h2><div id="hPrepost"></div></div>
+  <div class="card">
+    <h2><span class="bar"></span>📈 歷史成效時間趨勢</h2>
+    <p class="sub">依填答時間累積之整體運算思維平均走勢（前測、後測分流），呈現歷史成效的時序變化。</p>
+    <div class="viz-grid">
+      <div class="viz-box"><h3>累積平均走勢（前測 vs 後測）</h3><div id="hTrend"></div></div>
+      <div class="viz-box"><h3>構面前後測雷達</h3><div id="hRadar"></div>
+        <div class="tip" style="text-align:center;margin-top:6px"><span class="chip" style="background:#93C5FD;color:#1E3A8A">前測</span> <span class="chip" style="background:#1E3A8A">後測</span></div></div>
+    </div>
+    <h3>分時段歷史成效</h3>
+    <div style="overflow:auto"><table id="hSegTable"></table></div>
+  </div>
+  <div class="card">
+    <h2><span class="bar"></span>🕒 現況即時對照</h2>
+    <p class="sub">即時統計（4C 平台本機/雲端資料）持續反映當前狀況；下列為現況即時值，與上方歷史基準並列參照。</p>
+    <div class="kpi-grid" id="hLive"></div>
+    <div class="notice warn" id="hLiveNote" style="margin-top:12px"></div>
+  </div>
+</section>
+
 </main>
 <div class="toast" id="toast"></div>
 <footer style="text-align:center;color:var(--mute);font-size:12px;padding:22px">4C 學習成效即時評量平台　·　純前端單檔運作，資料僅存於本機瀏覽器，不外傳</footer>
@@ -538,6 +569,15 @@ TEACH.forEach((t,i)=>QLIST.push({key:t,type:'t',idx:i}));
 const QIDX={};QLIST.forEach((q,i)=>{QIDX[q.type==='m'?q.dim+'_'+q.comp:'t'+q.idx]=i;});
 const N=QLIST.length;
 
+/* ====== 歷史趨勢資料（運算思維前後測，已內嵌；獨立於即時 DATA） ====== */
+const HISTORY=[{"t":"2026/02/08 15:28:58","s":"7743","g":"前","e":2,"c":[2,2,2,2,2,1,1,1,1,1,1,1,1,1,1,1]},{"t":"2026/02/09 12:02:03","s":"1491","g":"前","e":1,"c":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},{"t":"2026/02/09 13:45:49","s":"3010","g":"前","e":1,"c":[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5]},{"t":"2026/02/09 13:51:03","s":"3023","g":"前","e":0,"c":[3,3,2,2,4,3,3,3,3,3,3,3,3,3,3,3]},{"t":"2026/02/09 13:54:20","s":"7045","g":"前","e":0,"c":[4,4,3,4,3,3,2,2,3,2,2,2,3,3,3,3]},{"t":"2026/02/09 14:05:46","s":"7014","g":"前","e":1,"c":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},{"t":"2026/02/09 14:16:46","s":"7049","g":"前","e":1,"c":[3,3,1,3,3,3,3,3,3,3,1,3,2,3,3,3]},{"t":"2026/02/09 15:09:44","s":"6003","g":"前","e":0,"c":[3,3,3,4,4,4,4,4,4,4,4,4,4,4,4,4]},{"t":"2026/02/09 15:20:32","s":"7003","g":"前","e":0,"c":[4,4,3,3,4,4,3,2,2,3,3,3,3,3,4,3]},{"t":"2026/02/09 17:11:15","s":"6014","g":"前","e":1,"c":[4,3,3,3,3,4,4,3,3,3,3,3,2,3,3,4]},{"t":"2026/02/09 17:39:31","s":"7002","g":"前","e":1,"c":[3,2,3,2,4,3,3,2,4,3,3,3,3,3,2,4]},{"t":"2026/02/09 17:55:07","s":"3031","g":"前","e":0,"c":[4,4,4,4,3,3,3,3,3,3,3,3,4,4,5,5]},{"t":"2026/02/09 23:33:39","s":"5158","g":"前","e":1,"c":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},{"t":"2026/02/10 07:15:35","s":"6014","g":"前","e":2,"c":[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5]},{"t":"2026/02/11 07:59:01","s":"6021","g":"前","e":0,"c":[3,3,3,4,4,4,3,3,2,3,2,2,3,4,3,4]},{"t":"2026/02/11 13:20:05","s":"7001","g":"前","e":1,"c":[4,5,5,4,5,4,5,4,4,5,4,5,4,5,4,5]},{"t":"2026/02/11 21:07:42","s":"3013","g":"前","e":2,"c":[4,3,4,3,4,4,5,4,5,5,4,5,5,4,4,1]},{"t":"2026/02/24 14:08:41","s":"3034","g":"前","e":1,"c":[4,3,4,4,4,4,4,4,3,3,3,3,3,3,4,4]},{"t":"2026/02/26 08:27:25","s":"1019","g":"前","e":0,"c":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},{"t":"2026/02/26 08:29:47","s":"1029","g":"前","e":0,"c":[3,3,2,2,3,3,2,2,1,2,2,2,2,2,2,4]},{"t":"2026/02/26 08:29:58","s":"1011","g":"前","e":0,"c":[3,2,1,2,3,3,1,1,2,2,3,2,2,2,2,3]},{"t":"2026/02/26 08:30:17","s":"1034","g":"前","e":1,"c":[5,5,3,5,5,3,5,5,4,3,4,5,4,4,2,4]},{"t":"2026/02/26 08:30:34","s":"1030","g":"前","e":0,"c":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},{"t":"2026/02/26 08:30:51","s":"1012","g":"前","e":0,"c":[3,4,3,4,3,3,3,3,3,3,3,3,3,3,3,3]},{"t":"2026/02/26 08:30:57","s":"1016","g":"前","e":0,"c":[3,2,1,2,1,1,1,1,1,1,1,1,1,2,2,3]},{"t":"2026/02/26 08:31:05","s":"0040","g":"前","e":0,"c":[3,3,3,2,3,3,2,2,2,3,2,3,3,4,3,4]},{"t":"2026/02/26 08:31:38","s":"0625","g":"前","e":0,"c":[3,3,3,3,4,3,4,4,4,2,2,2,4,4,2,3]},{"t":"2026/02/26 08:31:57","s":"1032","g":"前","e":0,"c":[3,3,3,3,2,2,2,2,2,2,2,2,2,2,2,3]},{"t":"2026/02/26 08:32:18","s":"1041","g":"前","e":0,"c":[3,3,2,3,3,3,2,2,3,2,3,3,2,3,2,3]},{"t":"2026/02/26 08:32:23","s":"1024","g":"前","e":1,"c":[2,2,2,2,3,4,2,4,3,2,2,2,2,3,2,3]},{"t":"2026/02/26 08:32:55","s":"1006","g":"前","e":0,"c":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},{"t":"2026/02/26 08:32:56","s":"1014","g":"前","e":0,"c":[4,4,2,4,4,4,2,3,3,3,4,2,3,3,3,5]},{"t":"2026/02/26 08:33:24","s":"1003","g":"前","e":0,"c":[3,3,3,3,4,3,3,3,2,2,2,2,3,3,3,3]},{"t":"2026/02/26 08:36:04","s":"1009","g":"前","e":0,"c":[3,2,1,3,3,4,3,3,2,3,2,3,3,4,4,5]},{"t":"2026/02/26 08:36:57","s":"1008","g":"前","e":0,"c":[3,4,3,4,4,3,3,4,4,4,3,3,4,4,3,4]},{"t":"2026/02/26 08:38:54","s":"1010","g":"前","e":0,"c":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},{"t":"2026/02/26 08:38:54","s":"1037","g":"前","e":1,"c":[3,3,2,4,3,4,2,2,3,2,3,3,2,2,3,3]},{"t":"2026/02/26 08:44:22","s":"1039","g":"前","e":2,"c":[4,3,3,3,3,3,4,3,3,4,3,3,3,4,3,4]},{"t":"2026/02/26 08:44:23","s":"1031","g":"前","e":1,"c":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},{"t":"2026/02/26 08:45:36","s":"1035","g":"前","e":1,"c":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},{"t":"2026/02/26 08:48:49","s":"1042","g":"前","e":0,"c":[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5]},{"t":"2026/02/26 08:52:10","s":"1016","g":"前","e":0,"c":[2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3]},{"t":"2026/02/26 08:52:11","s":"1011","g":"前","e":0,"c":[3,1,1,3,2,3,1,1,2,2,2,2,2,3,3,4]},{"t":"2026/02/26 08:52:23","s":"1041","g":"前","e":0,"c":[3,2,2,3,3,3,2,2,3,2,3,2,2,2,3,3]},{"t":"2026/02/26 08:52:58","s":"1035","g":"前","e":1,"c":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},{"t":"2026/02/26 08:53:29","s":"1013","g":"前","e":0,"c":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},{"t":"2026/02/26 08:54:28","s":"1020","g":"前","e":0,"c":[3,3,3,3,3,3,2,3,2,3,2,3,2,2,3,3]},{"t":"2026/02/26 08:54:57","s":"1044","g":"前","e":1,"c":[2,2,2,2,2,3,1,2,3,2,2,3,2,2,2,3]},{"t":"2026/02/26 08:55:58","s":"1038","g":"前","e":0,"c":[3,4,3,3,4,3,4,4,4,3,3,3,4,4,5,5]},{"t":"2026/02/26 08:56:05","s":"1018","g":"前","e":1,"c":[4,4,4,4,3,3,3,3,3,3,3,3,3,3,3,3]},{"t":"2026/02/26 08:57:24","s":"1027","g":"前","e":0,"c":[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5]},{"t":"2026/02/26 08:57:42","s":"1023","g":"前","e":0,"c":[3,3,3,3,2,2,2,2,2,2,2,2,2,2,2,3]},{"t":"2026/02/26 08:58:08","s":"1015","g":"前","e":0,"c":[4,4,4,4,4,4,3,4,3,4,4,4,4,4,4,4]},{"t":"2026/02/26 08:58:46","s":"1002","g":"前","e":0,"c":[3,3,2,3,3,3,2,2,2,2,2,2,2,2,2,2]},{"t":"2026/02/26 10:31:38","s":"7012","g":"前","e":1,"c":[3,3,3,3,3,4,4,3,2,2,2,3,2,2,2,2]},{"t":"2026/02/26 10:50:06","s":"7018","g":"前","e":0,"c":[3,3,2,3,3,2,2,2,2,2,2,2,1,1,1,2]},{"t":"2026/02/26 11:00:40","s":"7048","g":"前","e":0,"c":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},{"t":"2026/02/26 11:01:15","s":"7051","g":"前","e":0,"c":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},{"t":"2026/02/26 11:01:17","s":"7003","g":"前","e":1,"c":[4,4,4,4,3,4,4,4,2,3,2,3,2,3,3,3]},{"t":"2026/02/26 11:01:23","s":"7004","g":"前","e":0,"c":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},{"t":"2026/02/26 11:01:36","s":"7054","g":"前","e":0,"c":[3,3,3,2,3,3,2,2,3,3,3,3,3,2,2,2]},{"t":"2026/02/26 11:01:38","s":"7056","g":"前","e":0,"c":[3,3,2,3,3,3,2,3,2,2,3,2,3,3,3,3]},{"t":"2026/02/26 11:01:40","s":"7049","g":"前","e":0,"c":[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]},{"t":"2026/02/26 11:01:43","s":"7052","g":"前","e":0,"c":[2,3,3,4,3,3,4,2,2,3,2,2,2,2,3,3]},{"t":"2026/02/26 11:01:49","s":"7015","g":"前","e":0,"c":[5,3,4,3,5,5,3,3,2,2,2,2,3,3,5,5]},{"t":"2026/02/26 11:01:55","s":"7028","g":"前","e":0,"c":[3,3,3,3,3,3,3,3,3,2,3,2,2,2,2,3]},{"t":"2026/02/26 11:01:57","s":"2970","g":"前","e":0,"c":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,4]},{"t":"2026/02/26 11:02:08","s":"7013","g":"前","e":0,"c":[3,3,2,3,3,4,4,4,1,1,1,1,1,3,1,4]},{"t":"2026/02/26 11:02:09","s":"7022","g":"前","e":0,"c":[3,3,2,3,2,2,2,3,2,2,2,2,2,3,2,4]},{"t":"2026/02/26 11:02:26","s":"7041","g":"前","e":1,"c":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},{"t":"2026/02/26 11:02:28","s":"7012","g":"前","e":1,"c":[3,3,3,3,4,4,2,2,2,3,2,2,2,2,2,3]},{"t":"2026/02/26 11:02:28","s":"7046","g":"前","e":0,"c":[3,3,3,2,3,2,3,3,2,3,3,3,3,3,3,3]},{"t":"2026/02/26 11:02:31","s":"7035","g":"前","e":0,"c":[3,2,3,4,3,2,2,2,1,1,1,1,1,1,1,3]},{"t":"2026/02/26 11:02:37","s":"7026","g":"前","e":1,"c":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},{"t":"2026/02/26 11:02:41","s":"7017","g":"前","e":0,"c":[3,3,1,3,3,3,3,3,2,3,2,2,2,2,3,3]},{"t":"2026/02/26 11:02:52","s":"7053","g":"前","e":0,"c":[3,3,2,3,3,3,3,3,1,3,1,2,1,3,3,5]},{"t":"2026/02/26 11:02:53","s":"7014","g":"前","e":1,"c":[5,5,5,5,3,4,5,3,3,2,3,5,1,3,3,5]},{"t":"2026/02/26 11:02:54","s":"7002","g":"前","e":0,"c":[2,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},{"t":"2026/02/26 11:02:57","s":"7032","g":"前","e":1,"c":[3,3,3,3,4,3,3,3,3,4,3,4,3,4,4,4]},{"t":"2026/02/26 11:03:00","s":"7008","g":"前","e":0,"c":[2,2,2,2,2,2,2,2,2,3,2,2,1,2,2,4]},{"t":"2026/02/26 11:03:03","s":"7029","g":"前","e":1,"c":[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5]},{"t":"2026/02/26 11:03:25","s":"7057","g":"前","e":1,"c":[3,3,4,4,4,3,4,3,3,3,4,3,2,2,3,3]},{"t":"2026/02/26 11:03:26","s":"7045","g":"前","e":1,"c":[3,3,3,3,4,3,3,3,1,1,1,1,1,1,2,5]},{"t":"2026/02/26 11:03:31","s":"7005","g":"前","e":0,"c":[2,1,2,3,3,4,2,1,1,1,1,1,2,3,3,3]},{"t":"2026/02/26 11:03:33","s":"7019","g":"前","e":0,"c":[3,3,2,4,3,4,2,2,3,3,2,2,2,3,3,4]},{"t":"2026/02/26 11:03:37","s":"7034","g":"前","e":0,"c":[4,4,3,3,5,5,5,5,4,3,5,4,4,5,5,4]},{"t":"2026/02/26 11:03:38","s":"7021","g":"前","e":0,"c":[4,4,4,4,5,5,4,4,4,4,4,4,3,4,4,4]},{"t":"2026/02/26 11:03:47","s":"7010","g":"前","e":0,"c":[3,4,3,3,4,3,3,3,2,3,2,3,3,3,3,4]},{"t":"2026/02/26 11:03:48","s":"7001","g":"前","e":0,"c":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},{"t":"2026/02/26 11:03:51","s":"7040","g":"前","e":0,"c":[3,2,2,2,2,2,3,2,2,3,3,3,3,3,2,3]},{"t":"2026/02/26 11:04:06","s":"7033","g":"前","e":0,"c":[2,2,1,3,3,2,2,3,2,3,3,1,2,1,3,2]},{"t":"2026/02/26 11:04:22","s":"7023","g":"前","e":0,"c":[3,2,2,3,2,2,2,2,3,3,2,2,2,2,3,3]},{"t":"2026/02/26 11:04:28","s":"7020","g":"前","e":1,"c":[2,2,3,3,3,2,2,2,1,1,1,1,1,3,2,4]},{"t":"2026/02/26 11:04:28","s":"7024","g":"前","e":1,"c":[3,4,4,3,4,4,4,4,2,1,2,3,4,2,2,4]},{"t":"2026/02/26 11:04:34","s":"7018","g":"前","e":0,"c":[3,4,4,3,3,3,3,3,2,2,2,2,2,2,2,3]},{"t":"2026/02/26 11:04:37","s":"7001","g":"前","e":0,"c":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},{"t":"2026/02/26 11:04:40","s":"B11427011","g":"前","e":0,"c":[3,1,1,2,2,3,3,3,1,1,1,2,1,1,1,5]},{"t":"2026/02/26 11:04:40","s":"7006","g":"前","e":1,"c":[4,3,3,4,3,4,3,3,3,2,2,3,3,3,3,3]},{"t":"2026/02/26 11:05:04","s":"7009","g":"前","e":0,"c":[3,3,3,3,3,3,3,3,2,3,2,2,3,3,3,3]},{"t":"2026/02/26 11:05:18","s":"7025","g":"前","e":0,"c":[4,4,4,4,4,2,4,4,1,1,2,2,1,1,1,3]},{"t":"2026/02/26 11:05:19","s":"7027","g":"前","e":0,"c":[3,3,2,2,3,3,3,2,2,2,2,2,3,3,2,3]},{"t":"2026/02/26 11:05:35","s":"7036","g":"前","e":1,"c":[3,4,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},{"t":"2026/02/26 11:07:17","s":"7007","g":"前","e":1,"c":[3,3,1,4,4,5,2,4,1,1,1,1,1,1,1,3]},{"t":"2026/02/26 16:05:12","s":"3026","g":"前","e":0,"c":[3,4,2,2,4,3,2,3,3,4,2,3,1,1,1,1]},{"t":"2026/02/26 16:05:39","s":"3048","g":"前","e":0,"c":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},{"t":"2026/02/26 16:05:43","s":"3039","g":"前","e":0,"c":[3,4,3,3,3,3,4,3,3,3,3,3,3,3,3,3]},{"t":"2026/02/26 16:05:44","s":"3044","g":"前","e":0,"c":[3,2,2,2,3,3,2,3,2,3,3,2,3,2,2,3]},{"t":"2026/02/26 16:05:44","s":"3056","g":"前","e":0,"c":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},{"t":"2026/02/26 16:05:56","s":"3003","g":"前","e":0,"c":[3,2,2,3,3,2,3,1,2,2,3,1,3,2,2,3]},{"t":"2026/02/26 16:06:11","s":"3019","g":"前","e":0,"c":[3,3,4,3,3,3,3,3,3,3,3,3,3,3,3,2]},{"t":"2026/02/26 16:06:20","s":"0130","g":"前","e":0,"c":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},{"t":"2026/02/26 16:06:22","s":"3015","g":"前","e":0,"c":[3,4,4,4,4,4,4,4,3,3,4,4,3,4,4,4]},{"t":"2026/02/26 16:06:32","s":"3033","g":"前","e":0,"c":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2]},{"t":"2026/02/26 16:06:32","s":"3007","g":"前","e":0,"c":[2,2,2,3,3,3,2,3,2,3,3,2,3,3,3,3]},{"t":"2026/02/26 16:06:40","s":"3052","g":"前","e":0,"c":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},{"t":"2026/02/26 16:06:43","s":"3049","g":"前","e":0,"c":[3,2,1,1,2,1,2,1,2,2,2,2,1,4,1,4]},{"t":"2026/02/26 16:06:57","s":"13062","g":"前","e":0,"c":[2,2,2,2,3,2,2,2,3,2,1,2,3,2,3,3]},{"t":"2026/02/26 16:07:07","s":"3060","g":"前","e":0,"c":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},{"t":"2026/02/26 16:07:11","s":"3001","g":"前","e":0,"c":[3,3,2,3,2,3,2,2,2,3,3,3,3,3,3,3]},{"t":"2026/02/26 16:07:14","s":"3027","g":"前","e":1,"c":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},{"t":"2026/02/26 16:07:14","s":"3300","g":"前","e":0,"c":[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5]},{"t":"2026/02/26 16:07:15","s":"3050","g":"前","e":0,"c":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},{"t":"2026/02/26 16:07:16","s":"3028","g":"前","e":0,"c":[3,3,2,4,4,4,4,4,2,2,2,3,3,3,3,5]},{"t":"2026/02/26 16:07:16","s":"3301","g":"前","e":0,"c":[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5]},{"t":"2026/02/26 16:07:18","s":"3057","g":"前","e":0,"c":[3,3,3,4,3,2,1,3,1,1,2,3,3,4,2,4]},{"t":"2026/02/26 16:07:19","s":"3032","g":"前","e":0,"c":[2,2,2,2,2,2,2,2,2,2,2,2,3,3,3,4]},{"t":"2026/02/26 16:07:20","s":"3042","g":"前","e":0,"c":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},{"t":"2026/02/26 16:07:20","s":"3009","g":"前","e":0,"c":[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,4]},{"t":"2026/02/26 16:07:25","s":"3017","g":"前","e":0,"c":[3,2,2,3,1,3,1,1,1,1,1,1,1,1,1,1]},{"t":"2026/02/26 16:07:28","s":"3047","g":"前","e":0,"c":[2,3,2,3,3,3,3,3,1,2,2,1,2,2,2,2]},{"t":"2026/02/26 16:07:33","s":"3034","g":"前","e":0,"c":[3,2,2,3,3,3,2,3,3,3,3,3,3,3,2,2]},{"t":"2026/02/26 16:07:34","s":"3058","g":"前","e":0,"c":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},{"t":"2026/02/26 16:07:36","s":"3016","g":"前","e":0,"c":[4,4,3,4,5,3,3,3,3,3,2,3,3,3,3,4]},{"t":"2026/02/26 16:07:37","s":"3037","g":"前","e":1,"c":[2,3,2,3,2,2,2,2,3,3,3,3,2,2,3,3]},{"t":"2026/02/26 16:07:38","s":"3029","g":"前","e":1,"c":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},{"t":"2026/02/26 16:07:45","s":"3021","g":"前","e":1,"c":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},{"t":"2026/02/26 16:07:50","s":"3010","g":"前","e":1,"c":[2,2,2,2,2,2,2,2,1,2,2,2,2,1,1,1]},{"t":"2026/02/26 16:07:52","s":"3054","g":"前","e":0,"c":[3,3,2,4,4,4,2,3,1,1,1,1,1,1,1,3]},{"t":"2026/02/26 16:07:57","s":"3013","g":"前","e":0,"c":[2,2,2,2,2,3,2,2,1,1,2,2,2,2,2,4]},{"t":"2026/02/26 16:08:06","s":"3005","g":"前","e":0,"c":[4,4,1,1,3,3,3,3,3,2,3,2,3,3,3,4]},{"t":"2026/02/26 16:08:07","s":"3006","g":"前","e":0,"c":[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,3]},{"t":"2026/02/26 16:08:15","s":"3020","g":"前","e":0,"c":[3,2,2,2,3,2,1,1,1,1,1,1,2,1,1,1]},{"t":"2026/02/26 16:08:18","s":"3150","g":"前","e":0,"c":[4,4,3,4,4,4,4,4,2,2,2,2,2,2,2,4]},{"t":"2026/02/26 16:08:19","s":"3040","g":"前","e":0,"c":[3,3,2,3,2,3,2,2,2,2,2,2,3,3,3,4]},{"t":"2026/02/26 16:08:21","s":"3024","g":"前","e":0,"c":[2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,3]},{"t":"2026/02/26 16:08:24","s":"3061","g":"前","e":0,"c":[3,3,1,2,2,3,3,3,3,3,3,3,2,2,2,4]},{"t":"2026/02/26 16:08:44","s":"3008","g":"前","e":0,"c":[3,3,3,3,3,3,3,3,1,1,1,1,1,1,1,1]},{"t":"2026/02/26 16:09:05","s":"3053","g":"前","e":0,"c":[2,3,2,3,3,2,3,2,1,2,1,1,2,2,3,3]},{"t":"2026/02/26 16:09:34","s":"3014","g":"前","e":0,"c":[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5]},{"t":"2026/02/26 16:09:47","s":"3018","g":"前","e":0,"c":[1,3,3,1,5,4,4,5,1,1,3,3,1,5,4,5]},{"t":"2026/02/26 16:09:48","s":"3055","g":"前","e":0,"c":[2,2,2,2,2,2,2,2,2,2,1,2,2,1,2,1]},{"t":"2026/02/26 16:09:55","s":"3002","g":"前","e":0,"c":[2,2,2,2,3,3,2,2,2,2,2,2,2,2,3,3]},{"t":"2026/02/26 16:10:39","s":"3023","g":"前","e":0,"c":[4,4,4,4,4,4,4,4,3,4,3,3,4,4,4,4]},{"t":"2026/02/26 16:11:15","s":"3011","g":"前","e":0,"c":[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,3]},{"t":"2026/02/26 16:12:12","s":"3025","g":"前","e":0,"c":[3,3,3,3,3,3,3,3,2,4,3,2,2,5,2,3]},{"t":"2026/02/26 18:30:48","s":"3035","g":"前","e":0,"c":[2,2,3,3,3,3,3,2,2,2,2,3,2,2,2,4]},{"t":"2026/03/26 10:38:06","s":"7032","g":"前","e":1,"c":[4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]},{"t":"2026/03/26 10:39:53","s":"7033","g":"前","e":0,"c":[3,3,2,3,3,2,2,2,2,2,3,2,2,2,2,3]},{"t":"2026/04/22 14:28:03","s":"3053","g":"前","e":0,"c":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},{"t":"2026/04/22 23:13:59","s":"3005","g":"前","e":0,"c":[3,3,3,3,3,3,3,3,3,3,3,3,3,4,3,3]},{"t":"2026/04/23 15:42:34","s":"3039","g":"前","e":0,"c":[3,3,2,2,3,4,3,2,2,3,3,3,3,3,3,2]},{"t":"2026/04/25 12:17:12","s":"3039","g":"前","e":0,"c":[3,3,3,3,3,3,4,3,4,3,3,3,3,4,2,2]},{"t":"2025/12/28 13:44:45","s":"7743","g":"後","e":2,"c":[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5]},{"t":"2025/12/28 14:07:36","s":"6007","g":"後","e":"","c":[4,4,4,4,5,4,4,4,4,4,4,4,4,4,5,5]},{"t":"2025/12/28 14:21:55","s":"3005","g":"後","e":0,"c":[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5]},{"t":"2025/12/28 19:10:09","s":"3034","g":"後","e":1,"c":[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5]},{"t":"2025/12/28 21:25:35","s":"3003","g":"後","e":0,"c":[4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]},{"t":"2025/12/29 00:27:20","s":"6039","g":"後","e":"","c":[4,4,3,4,4,3,4,4,4,4,3,4,3,4,4,4]},{"t":"2025/12/29 07:43:12","s":"6052","g":"後","e":"","c":[4,4,4,4,4,4,4,3,3,3,3,4,4,4,4,4]},{"t":"2025/12/29 08:59:27","s":"6035","g":"後","e":"","c":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},{"t":"2025/12/29 09:03:21","s":"6019","g":"後","e":"","c":[5,4,5,4,5,4,4,4,4,4,5,5,4,4,5,5]},{"t":"2025/12/29 09:04:40","s":"6012","g":"後","e":"","c":[2,3,3,3,4,3,3,2,2,2,3,4,4,3,4,4]},{"t":"2025/12/29 09:06:52","s":"6042","g":"後","e":"","c":[4,4,3,4,4,3,3,3,3,3,3,3,3,3,3,4]},{"t":"2025/12/29 09:09:33","s":"6151","g":"後","e":"","c":[5,5,4,4,5,5,4,4,3,3,4,4,3,3,3,4]},{"t":"2025/12/29 11:27:32","s":"3009","g":"後","e":0,"c":[4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]},{"t":"2025/12/29 12:31:07","s":"3043","g":"後","e":"","c":[5,4,3,4,5,3,4,5,5,3,4,5,5,3,5,5]},{"t":"2025/12/29 12:31:09","s":"3026","g":"後","e":0,"c":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},{"t":"2025/12/29 15:39:05","s":"3041","g":"後","e":"","c":[4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]},{"t":"2025/12/29 16:08:54","s":"7003","g":"後","e":0,"c":[4,4,4,4,4,4,4,4,3,3,4,3,3,4,3,4]},{"t":"2025/12/29 23:05:17","s":"7001","g":"後","e":1,"c":[5,4,5,4,4,5,5,5,5,5,5,5,4,5,4,4]},{"t":"2025/12/30 08:35:08","s":"7039","g":"後","e":"","c":[3,4,3,3,4,4,4,4,4,4,4,4,3,4,3,4]},{"t":"2025/12/30 09:10:19","s":"7032","g":"後","e":1,"c":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},{"t":"2025/12/30 09:10:41","s":"7002","g":"後","e":1,"c":[4,4,4,4,5,4,3,3,5,4,4,5,4,5,4,4]},{"t":"2025/12/30 09:15:12","s":"7018","g":"後","e":0,"c":[4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]},{"t":"2025/12/30 09:47:54","s":"3033","g":"後","e":0,"c":[4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]},{"t":"2025/12/30 19:47:29","s":"3025","g":"後","e":0,"c":[4,4,4,4,3,4,3,3,4,3,4,4,3,4,4,3]},{"t":"2025/12/31 00:06:37","s":"3031","g":"後","e":0,"c":[3,3,3,4,4,4,4,4,3,4,4,4,4,4,4,5]},{"t":"2025/12/31 15:45:17","s":"3010","g":"後","e":1,"c":[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5]},{"t":"2025/12/31 16:06:11","s":"3023","g":"後","e":0,"c":[4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]},{"t":"2025/12/31 16:22:08","s":"3011","g":"後","e":0,"c":[5,5,5,5,4,4,4,4,4,4,4,4,5,4,5,4]},{"t":"2025/12/31 16:25:32","s":"3015","g":"後","e":0,"c":[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5]},{"t":"2025/12/31 16:28:10","s":"3042","g":"後","e":0,"c":[5,4,4,4,5,4,4,4,4,4,5,4,4,5,5,4]},{"t":"2025/12/31 16:33:17","s":"3007","g":"後","e":0,"c":[3,4,2,3,4,5,4,3,4,4,3,3,4,5,3,5]},{"t":"2026/01/04 16:15:55","s":"7016","g":"後","e":"","c":[5,5,5,5,5,5,5,5,5,5,5,4,4,5,5,5]},{"t":"2026/01/04 18:33:05","s":"7017","g":"後","e":0,"c":[4,4,4,4,5,5,5,5,4,4,4,4,4,4,5,5]},{"t":"2026/01/05 09:44:35","s":"6058","g":"後","e":"","c":[3,3,3,3,3,3,3,3,3,4,4,4,4,3,3,4]},{"t":"2026/01/05 09:45:10","s":"6017","g":"後","e":"","c":[4,4,4,4,4,4,3,3,4,4,4,4,4,4,4,4]},{"t":"2026/01/05 09:45:17","s":"6016","g":"後","e":"","c":[4,4,3,4,3,4,3,3,4,4,4,4,3,4,4,4]},{"t":"2026/01/05 09:48:50","s":"6011","g":"後","e":"","c":[3,3,3,5,5,5,3,3,1,5,3,3,3,4,3,5]},{"t":"2026/01/07 16:52:36","s":"3006","g":"後","e":0,"c":[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5]},{"t":"2026/01/07 16:53:12","s":"3004","g":"後","e":"","c":[1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2]},{"t":"2026/01/07 16:53:28","s":"3043","g":"後","e":"","c":[1,1,1,1,1,1,1,1,1,1,2,2,1,2,2,1]},{"t":"2026/01/07 16:54:06","s":"3037","g":"後","e":1,"c":[4,4,3,3,3,2,3,2,1,3,3,4,4,4,4,4]},{"t":"2026/01/07 16:54:38","s":"33030","g":"後","e":"","c":[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5]},{"t":"2026/01/08 13:56:50","s":"3040","g":"後","e":0,"c":[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5]}];
+const HCT_DIMS=[
+  {name:'問題拆解能力',short:'問題拆解',idx:[0,1,2,3],color:'#2563EB'},
+  {name:'流程與邏輯思考',short:'流程邏輯',idx:[4,5,6,7],color:'#7C3AED'},
+  {name:'演算法理解能力',short:'演算法',idx:[8,9,10,11],color:'#0891B2'},
+  {name:'除錯與修正能力',short:'除錯修正',idx:[12,13,14,15],color:'#DB2777'}
+];
+
 let DATA=[]; // 每筆：{id,ts,sid,group,scores:[16]}
 
 /* ====== 工具 ====== */
@@ -554,6 +594,77 @@ function cellArr(d,c){const qi=QIDX[d+'_'+c];return DATA.map(r=>val(r,qi));}
 function teachArr(i){const qi=QIDX['t'+i];return DATA.map(r=>val(r,qi));}
 function ovOf(r){return mean(DIMS.flatMap(d=>COMPS.map(c=>val(r,QIDX[d.id+'_'+c.id]))));}
 function dimOf(r,id){return mean(COMPS.map(c=>val(r,QIDX[id+'_'+c.id])));}
+function compOf(r,cid){return mean(DIMS.map(d=>val(r,QIDX[d.id+'_'+cid])));}
+
+/* ====== 推論統計工具（P0：分階段信度、學生層級配對效果量、t 檢定，p 值由不完全 Beta 函數精算） ====== */
+function gammaln(xx){
+  const cof=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];
+  let x=xx,y=xx,tmp=x+5.5;tmp-=(x+0.5)*Math.log(tmp);let ser=1.000000000190015;
+  for(let j=0;j<6;j++){y++;ser+=cof[j]/y;}return -tmp+Math.log(2.5066282746310005*ser/x);
+}
+function betacf(a,b,x){
+  const FPMIN=1e-300,MAXIT=200,EPS=3e-12;let qab=a+b,qap=a+1,qam=a-1,c=1,d=1-qab*x/qap;
+  if(Math.abs(d)<FPMIN)d=FPMIN;d=1/d;let h=d;
+  for(let m=1;m<=MAXIT;m++){const m2=2*m;
+    let aa=m*(b-m)*x/((qam+m2)*(a+m2));d=1+aa*d;if(Math.abs(d)<FPMIN)d=FPMIN;c=1+aa/c;if(Math.abs(c)<FPMIN)c=FPMIN;d=1/d;h*=d*c;
+    aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));d=1+aa*d;if(Math.abs(d)<FPMIN)d=FPMIN;c=1+aa/c;if(Math.abs(c)<FPMIN)c=FPMIN;d=1/d;
+    const del=d*c;h*=del;if(Math.abs(del-1)<EPS)break;}
+  return h;
+}
+function betai(a,b,x){if(x<=0)return 0;if(x>=1)return 1;
+  const bt=Math.exp(gammaln(a+b)-gammaln(a)-gammaln(b)+a*Math.log(x)+b*Math.log(1-x));
+  return x<(a+1)/(a+b+2)?bt*betacf(a,b,x)/a:1-bt*betacf(b,a,1-x)/b;}
+function tTwoTailP(t,df){if(!isFinite(t)||df<=0)return NaN;const x=df/(df+t*t);return betai(df/2,0.5,x);}
+function tCritical(df,alpha){alpha=alpha||0.05;if(df<=0)return NaN;let lo=0,hi=1e4;
+  for(let i=0;i<200;i++){const mid=(lo+hi)/2;(tTwoTailP(mid,df)>alpha)?lo=mid:hi=mid;}return(lo+hi)/2;}
+function fmtP(p){return isNaN(p)?'–':(p<0.001?'< .001':'= '+p.toFixed(3).replace(/^0/,''));}
+function sigStar(p){return isNaN(p)?'':(p<0.001?' ***':p<0.01?' **':p<0.05?' *':' n.s.');}
+
+// 配對樣本 t 檢定（依差值），回傳 d_z 與配對 t、p、95%CI
+function pairedTest(preArr,postArr){
+  const diff=[];for(let i=0;i<preArr.length;i++){const dd=postArr[i]-preArr[i];if(!isNaN(dd))diff.push(dd);}
+  const n=diff.length;if(n<2)return{n,insufficient:true};
+  const mPre=mean(preArr),mPost=mean(postArr),md=mean(diff),sdd=sd(diff),se=sdd/Math.sqrt(n);
+  const t=se>0?md/se:NaN,df=n-1,p=tTwoTailP(t,df),dz=sdd>0?md/sdd:NaN,tc=tCritical(df,0.05);
+  return{n,mPre,mPost,md,sdd,se,t,df,p,dz,ciLo:md-tc*se,ciHi:md+tc*se,insufficient:false};
+}
+// 獨立樣本 t 檢定（Welch）＋ Cohen's d（合併標準差）
+function welchTest(aArr,bArr){
+  aArr=aArr.filter(x=>!isNaN(x));bArr=bArr.filter(x=>!isNaN(x));
+  const nA=aArr.length,nB=bArr.length;if(nA<2||nB<2)return{nA,nB,insufficient:true};
+  const mA=mean(aArr),mB=mean(bArr),vA=variance(aArr),vB=variance(bArr),se=Math.sqrt(vA/nA+vB/nB);
+  const t=se>0?(mA-mB)/se:NaN;
+  const df=se>0?Math.pow(vA/nA+vB/nB,2)/((vA*vA)/(nA*nA*(nA-1))+(vB*vB)/(nB*nB*(nB-1))):NaN;
+  const p=tTwoTailP(t,df),sp=Math.sqrt(((nA-1)*vA+(nB-1)*vB)/(nA+nB-2)),d=sp>0?(mA-mB)/sp:NaN,tc=tCritical(df,0.05),diff=mA-mB;
+  return{nA,nB,mA,mB,diff,d,t,df,p,ciLo:diff-tc*se,ciHi:diff+tc*se,insufficient:false};
+}
+// 學生層級彙總：metricFn(record)->值；回傳 {pre:{sid:mean}, post:{sid:mean}}
+function studentStageMeans(metricFn){
+  const acc={'前測':{},'後測':{}};
+  DATA.forEach(r=>{if(r.stage!=='前測'&&r.stage!=='後測')return;const v=metricFn(r);if(isNaN(v))return;
+    const k=(r.sid&&String(r.sid).trim())?String(r.sid).trim():('__noid__:'+r.id);
+    (acc[r.stage][k]=acc[r.stage][k]||[]).push(v);});
+  const pre={},post={};for(const k in acc['前測'])pre[k]=mean(acc['前測'][k]);for(const k in acc['後測'])post[k]=mean(acc['後測'][k]);
+  return{pre,post};
+}
+// 可配對（兩階段同一 sid 皆有值）的學生層級前/後測陣列；附全體（供獨立樣本後備）
+function pairedSeries(metricFn){
+  const {pre,post}=studentStageMeans(metricFn);const preArr=[],postArr=[];
+  Object.keys(post).forEach(k=>{if(k in pre&&!isNaN(pre[k])&&!isNaN(post[k])){preArr.push(pre[k]);postArr.push(post[k]);}});
+  return{preArr,postArr,preAll:Object.values(pre).filter(x=>!isNaN(x)),postAll:Object.values(post).filter(x=>!isNaN(x))};
+}
+const METRIC_OV=r=>ovOf(r);
+function metricDim(id){return r=>dimOf(r,id);}
+function metricComp(cid){return r=>compOf(r,cid);}
+// Cronbach α（listwise，僅用指定子集的完整作答；不再合併前後測）
+function cronbachAlpha(recs){
+  const items=[];DIMS.forEach(d=>COMPS.forEach(c=>items.push(QIDX[d.id+'_'+c.id])));const k=items.length;
+  const complete=recs.filter(r=>items.every(qi=>!isNaN(val(r,qi))));
+  if(complete.length<3)return NaN;
+  const itemVar=items.map(qi=>variance(complete.map(r=>val(r,qi))));
+  const totVar=variance(complete.map(r=>items.reduce((s,qi)=>s+val(r,qi),0)));
+  return totVar>0?(k/(k-1))*(1-itemVar.reduce((a,b)=>a+b,0)/totVar):NaN;
+}
 
 /* ====== 前端資料區（localStorage） ====== */
 let STORE_OK=true;
@@ -577,40 +688,80 @@ function refreshHome(){
 
 /* ====== 雲端收集區 (Apps Script Web App) ====== */
 let lastSync='';
+const OUTBOX_KEY='fourC_outbox_v1';
 function isCloud(){return !!(COLLECT_URL&&COLLECT_URL.trim());}
+// 內容簽章（不含 ts，避免試算表把時間字串轉成日期造成比對失準）：用於對賬與去重
+function sigOf(p){const sc=(p.scores||[]).map(v=>(v===''||v==null)?'':+v).join('|');
+  return [String(p.sid||''),String(p.stage||''),String(p.group||''),String(p.bg||''),String(p.se||''),sc].join('\u00A7');}
+function loadOutbox(){try{return JSON.parse(localStorage.getItem(OUTBOX_KEY)||'[]');}catch(e){return [];}}
+function saveOutbox(a){try{localStorage.setItem(OUTBOX_KEY,JSON.stringify(a));}catch(e){}}
+function outboxCount(){return loadOutbox().length;}
+function outboxAdd(payload){const ob=loadOutbox();const sig=sigOf(payload);if(ob.some(it=>it.sig===sig))return;ob.push({payload,sig,queuedAt:now(),tries:0});saveOutbox(ob);}
+function recFromPayload(p){return {id:uid(),ts:p.ts||'',sid:p.sid||'',group:p.group||'',bg:p.bg||'',stage:p.stage||'',
+  se:(p.se===''||p.se==null)?'':String(p.se),scores:(p.scores||[]).map(v=>(v===''||v==null)?'':parseFloat(v)),_pending:true};}
+
+// 可確認寫入：simple request（text/plain，不觸發 preflight），讀取後端回傳；失敗即丟出
 async function cloudPost(payload){
-  await fetch(COLLECT_URL.trim(),{method:'POST',mode:'no-cors',body:JSON.stringify(payload)});
-  return true;
+  const res=await fetch(COLLECT_URL.trim(),{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)});
+  if(!res.ok)throw new Error('HTTP '+res.status);
+  let data=null;try{data=await res.json();}catch(e){/* 舊版後端可能非 JSON，視 2xx 為成功 */}
+  if(data&&data.ok===false)throw new Error(data.error||'後端寫入失敗');
+  return data||{ok:true};
 }
-async function cloudFetch(){
+// 純讀取：回傳對齊後的記錄陣列（不直接覆寫 DATA）
+async function cloudGet(){
   const res=await fetch(COLLECT_URL.trim()+(COLLECT_URL.includes('?')?'&':'?')+'t='+Date.now());
   if(!res.ok)throw new Error('HTTP '+res.status);
   const arr=await res.json();
   if(!Array.isArray(arr))throw new Error('回傳格式錯誤');
-  DATA=arr.map(row=>({id:row.id||uid(),ts:String(row.ts||''),sid:String(row.sid||''),group:String(row.group||''),bg:String(row.bg||''),
+  return arr.map(row=>({id:row.id||uid(),ts:String(row.ts||''),sid:String(row.sid||''),group:String(row.group||''),bg:String(row.bg||''),
     stage:String(row.stage||''),se:(row.se===''||row.se==null)?'':String(row.se),
     scores:(row.scores||row.s||[]).map(v=>(v===''||v==null)?'':parseFloat(v))}));
-  lastSync=now();return DATA.length;
 }
+async function cloudFetch(){DATA=await cloudGet();lastSync=now();return DATA.length;}
+
 async function syncNow(silent){
   if(!isCloud()){if(!silent)msg('dataMsg','info','尚未設定雲端收集區，目前為本機模式。');refresh();return;}
-  try{const n=await cloudFetch();dbSave();renderData();compute();refreshHome();updateConnBadges();
-    if(!silent)msg('dataMsg','ok',`✓ 已從雲端收集區同步 ${n} 筆（${lastSync}）。`);}
-  catch(e){if(!silent)msg('dataMsg','err','✗ 同步失敗：'+e.message+'。請確認 Web App 已部署為「任何人可存取」。');}
+  try{
+    let cloudArr=await cloudGet();
+    // 對賬重送：已落地者丟棄，未落地者重送，失敗保留於佇列
+    const ob=loadOutbox();const landed=new Set(cloudArr.map(sigOf));const keep=[];let posted=0;
+    for(const it of ob){
+      if(landed.has(it.sig)){continue;}
+      try{await cloudPost(it.payload);posted++;}
+      catch(e){it.tries=(it.tries||0)+1;keep.push(it);}
+    }
+    saveOutbox(keep);
+    if(posted){try{cloudArr=await cloudGet();}catch(e){}}  // 重抓以納入剛送出者
+    // 合併雲端 ＋ 仍未確認的待送（避免雲端覆寫造成靜默遺失）
+    const cloudSig=new Set(cloudArr.map(sigOf));
+    const pend=keep.filter(it=>!cloudSig.has(it.sig)).map(it=>recFromPayload(it.payload));
+    DATA=cloudArr.concat(pend);lastSync=now();
+    dbSave();renderData();compute();refreshHome();updateConnBadges();
+    if(!silent){
+      const extra=pend.length?`，另有 ${pend.length} 筆待重送`:'';
+      msg('dataMsg',pend.length?'warn':'ok',`✓ 已同步雲端 ${cloudArr.length} 筆${extra}（${lastSync}）。`);
+    }
+  }catch(e){
+    // 同步失敗（含離線）：保留本機與待送佇列，絕不覆寫遺失
+    updateConnBadges();
+    if(!silent)msg('dataMsg','err','✗ 同步失敗：'+e.message+'。本機資料與待送佇列已保留，將於下次連線自動重送；請確認 Web App 已部署為「任何人可存取」。');
+  }
 }
 async function pushRecord(rec){
-  DATA.push(rec);refresh();              // 樂觀寫入：前端資料區與統計即時更新
-  if(isCloud()){
-    try{await cloudPost({ts:rec.ts,sid:rec.sid,group:rec.group,bg:rec.bg||'',stage:rec.stage||'',se:rec.se||'',scores:rec.scores});}
-    catch(e){/* 已暫存本地，稍後同步會以雲端為準 */}
-  }
+  if(!isCloud()){DATA.push(rec);refresh();return;}
+  const payload={ts:rec.ts,sid:rec.sid,group:rec.group,bg:rec.bg||'',stage:rec.stage||'',se:rec.se||'',scores:rec.scores};
+  DATA.push(rec);refresh();              // 樂觀寫入：前端即時更新
+  try{await cloudPost(payload);}          // 成功 → 已落地，下次同步以雲端為準
+  catch(e){outboxAdd(payload);refresh();} // 失敗/離線 → 進重送佇列，不遺失
+  updateConnBadges();
 }
 let autoTimer=null;
 function startAuto(){if(autoTimer)clearInterval(autoTimer);if(isCloud()&&AUTO_REFRESH_SEC>0)autoTimer=setInterval(()=>syncNow(true),AUTO_REFRESH_SEC*1000);}
 function updateConnBadges(){
-  const cloud=isCloud();
+  const cloud=isCloud(),pend=outboxCount();
   document.querySelectorAll('.conn-badge').forEach(el=>{
-    el.innerHTML=cloud?`☁ 雲端收集區　<b>已連線</b>${lastSync?'　·　最後同步 '+lastSync:''}`:`💾 本機資料庫模式`;
+    el.innerHTML=cloud?`☁ 雲端收集區　<b>已連線</b>${lastSync?'　·　最後同步 '+lastSync:''}${pend?'　·　<b style="color:#B45309">待重送 '+pend+' 筆</b>':''}`:`💾 本機資料庫模式`;
     el.className='conn-badge '+(cloud?'on':'off');});
 }
 
@@ -694,7 +845,7 @@ function renderData(){
   TEACH.forEach((_,i)=>h+=`<th class="num">T${i+1}</th>`);h+='<th>操作</th></tr>';
   if(!DATA.length)h+=`<tr><td colspan="25" style="text-align:center;color:var(--mute);padding:22px">資料區尚無紀錄</td></tr>`;
   DATA.forEach((r,i)=>{
-    h+=`<tr><td>${i+1}</td><td style="font-size:12px;white-space:nowrap">${esc(r.ts||'')}</td><td>${esc(r.sid||'–')}</td><td>${esc(r.group||'–')}</td><td>${esc(r.bg||'–')}</td><td>${esc(r.stage||'–')}</td><td class="num">${(r.se===''||r.se==null)?'–':r.se}</td>`;
+    h+=`<tr${r._pending?' style="background:#FFFBEB"':''}><td>${i+1}</td><td style="font-size:12px;white-space:nowrap">${esc(r.ts||'')}${r._pending?' <span style="color:#B45309;font-weight:700">⏳待送</span>':''}</td><td>${esc(r.sid||'–')}</td><td>${esc(r.group||'–')}</td><td>${esc(r.bg||'–')}</td><td>${esc(r.stage||'–')}</td><td class="num">${(r.se===''||r.se==null)?'–':r.se}</td>`;
     DIMS.forEach(d=>COMPS.forEach(c=>{const v=r.scores[QIDX[d.id+'_'+c.id]];h+=`<td class="num">${v===''||v==null?'–':v}</td>`;}));
     TEACH.forEach((_,k)=>{const v=r.scores[QIDX['t'+k]];h+=`<td class="num">${v===''||v==null?'–':v}</td>`;});
     h+=`<td class="del" onclick="delRec('${r.id}')">刪除</td></tr>`;
@@ -878,8 +1029,9 @@ function loadDemo(){
   const basePre={mind_crit:3.4,mind_comm:3.2,mind_collab:3.5,mind_create:3.3,ipo_crit:3.1,ipo_comm:3.0,ipo_collab:3.2,ipo_create:2.9,py_crit:2.8,py_comm:2.9,py_collab:3.1,py_create:2.7};
   const basePost={mind_crit:4.3,mind_comm:4.0,mind_collab:4.4,mind_create:4.1,ipo_crit:3.9,ipo_comm:3.7,ipo_collab:4.0,ipo_create:3.6,py_crit:3.4,py_comm:3.5,py_collab:3.8,py_create:3.3};
   const tbPre=[3.3,3.4,3.0,3.1],tbPost=[4.2,4.3,3.9,4.0],rnd=()=>Math.random();
+  const lat=Array.from({length:30},()=>(rnd()+rnd()-1)*0.85); // 每位學生跨題一致的潛在能力偏移 → 產生合理內部一致性
   function mk(stage,base,tb,s){const scores=QLIST.map(qq=>{let mn=qq.type==='m'?base[qq.dim+'_'+qq.comp]:tb[qq.idx];
-    let v=Math.round(mn+(rnd()+rnd()+rnd()-1.5)*0.9);return Math.max(1,Math.min(5,v));});
+    let v=Math.round(mn+lat[s]+(rnd()-0.5)*1.0);return Math.max(1,Math.min(5,v));});
     return {id:uid(),ts:'2025/06/0'+((s%7)+1)+' '+(9+s%8)+':00:00',sid:'(示範)'+(s+1),group:'示範第'+((s%6)+1)+'組',
       bg:(s%5<3?'資訊相關':'非資訊相關'),stage:stage,se:String(Math.max(1,Math.min(5,Math.round(3+(rnd()+rnd()-1)*1.5)))),scores};}
   for(let s=0;s<30;s++){ DATA.push(mk('前測',basePre,tbPre,s)); DATA.push(mk('後測',basePost,tbPost,s)); }
@@ -897,11 +1049,14 @@ function compute(){
   const compAvg={};COMPS.forEach(c=>{let all=[];DIMS.forEach(d=>all=all.concat(cellArr(d.id,c.id)));compAvg[c.id]=mean(all);});
   let allM=[];DIMS.forEach(d=>COMPS.forEach(c=>allM=allM.concat(cellArr(d.id,c.id))));const overall=mean(allM);
   const tArr=[0,1,2,3].map(i=>teachArr(i));const teach=tArr.map(a=>({m:mean(a),sd:sd(a)}));const teachAvg=mean([].concat(...tArr));
-  const itemVars=DIMS.flatMap(d=>COMPS.map(c=>variance(cellArr(d.id,c.id))));
-  const totals=DATA.map(r=>{let s=0,ok=true;DIMS.forEach(d=>COMPS.forEach(c=>{const v=val(r,QIDX[d.id+'_'+c.id]);if(isNaN(v))ok=false;else s+=v;}));return ok?s:NaN;});
-  const k=12,sumVar=itemVars.reduce((a,b)=>a+b,0),totVar=variance(totals);
-  const alpha=totVar>0?(k/(k-1))*(1-sumVar/totVar):NaN;
-  STAT={cell,dimAvg,compAvg,overall,teach,teachAvg,alpha,n:DATA.length};
+  // 信度依施測階段分別估計（listwise），不再合併前後測
+  const preRecs=DATA.filter(r=>r.stage==='前測'),postRecs=DATA.filter(r=>r.stage==='後測');
+  const alphaPre=cronbachAlpha(preRecs),alphaPost=cronbachAlpha(postRecs);
+  let alpha,alphaStage;
+  if(!isNaN(alphaPost)){alpha=alphaPost;alphaStage='後測';}
+  else if(!isNaN(alphaPre)){alpha=alphaPre;alphaStage='前測';}
+  else{alpha=cronbachAlpha(DATA);alphaStage='全部';}
+  STAT={cell,dimAvg,compAvg,overall,teach,teachAvg,alpha,alphaPre,alphaPost,alphaStage,nPre:preRecs.length,nPost:postRecs.length,n:DATA.length};
   renderStats();renderTrend();renderReport();
 }
 function scoreColor(v){if(isNaN(v))return '#9CA3AF';
@@ -944,7 +1099,10 @@ function renderStats(){
   DIMS.forEach(d=>COMPS.forEach(c=>{const x=STAT.cell[d.id+'_'+c.id],b=band(x.m);
     dt+=`<tr><td><span class="chip ${d.cls}">${d.name}</span></td><td>${c.name}</td><td class="num"><b>${x.m.toFixed(2)}</b></td><td class="num">${x.sd.toFixed(2)}</td><td class="num">${x.n}</td><td><span style="color:${b[1]};font-weight:700">${b[0]}</span></td></tr>`;}));
   document.getElementById('detailTable').innerHTML=dt;
-  document.getElementById('alphaBox').innerHTML=`📐 <b>量表信度</b>：12 題 4C 量表 Cronbach α = <b>${a}</b>（${alphaTxt(STAT.alpha)}）。α ≥ 0.7 通常視為具可接受的內部一致性。`;
+  let aDetail=(!isNaN(STAT.alphaPre)&&!isNaN(STAT.alphaPost))
+    ?`前測 α=<b>${STAT.alphaPre.toFixed(2)}</b>（n=${STAT.nPre}）、後測 α=<b>${STAT.alphaPost.toFixed(2)}</b>（n=${STAT.nPost}）`
+    :`以「${STAT.alphaStage}」資料估計（n=${STAT.alphaStage==='後測'?STAT.nPost:STAT.alphaStage==='前測'?STAT.nPre:STAT.n}）`;
+  document.getElementById('alphaBox').innerHTML=`📐 <b>量表信度</b>：12 題 4C 量表 Cronbach α = <b>${a}</b>（${alphaTxt(STAT.alpha)}，${STAT.alphaStage}）。${aDetail}。α ≥ 0.7 通常視為具可接受的內部一致性。<br><span class="tip">註：信度依施測階段分別估計（採完整作答 listwise），不再合併前後測。</span>`;
 }
 function teachLabel(i){return['四步驟教學有助學習','講解示範清楚','提升解決問題能力','願意推薦課程'][i];}
 
@@ -958,45 +1116,79 @@ function cohenD(a,b){ // a=後測, b=前測
 }
 function dBand(d){const a=Math.abs(d);if(a>=0.8)return['大效果量','#16A34A'];if(a>=0.5)return['中效果量','#65A30D'];if(a>=0.2)return['小效果量','#F59E0B'];return['微弱','#9CA3AF'];}
 function renderPrePost(){
-  const pre=DATA.filter(r=>r.stage==='前測'),post=DATA.filter(r=>r.stage==='後測');
   const box=document.getElementById('prepostBox');
+  const pre=DATA.filter(r=>r.stage==='前測'),post=DATA.filter(r=>r.stage==='後測');
   if(!pre.length||!post.length){
     box.innerHTML=`<div class="notice info">需同時有「前測」與「後測」資料才會顯示效果量分析。目前前測 ${pre.length} 筆、後測 ${post.length} 筆。作答時請選擇「測驗階段」，或於資料區「載入示範資料」。</div>`;return;}
-  const rows=[];
-  DIMS.forEach(d=>{const preA=pre.flatMap(r=>COMPS.map(c=>val(r,QIDX[d.id+'_'+c.id]))),postA=post.flatMap(r=>COMPS.map(c=>val(r,QIDX[d.id+'_'+c.id])));
-    rows.push({name:d.name,pre:mean(preA),post:mean(postA),d:cohenD(postA,preA)});});
-  COMPS.forEach(c=>{const preA=pre.flatMap(r=>DIMS.map(d=>val(r,QIDX[d.id+'_'+c.id]))),postA=post.flatMap(r=>DIMS.map(d=>val(r,QIDX[d.id+'_'+c.id])));
-    rows.push({name:c.name,pre:mean(preA),post:mean(postA),d:cohenD(postA,preA)});});
-  const preAll=pre.flatMap(r=>DIMS.flatMap(d=>COMPS.map(c=>val(r,QIDX[d.id+'_'+c.id])))),postAll=post.flatMap(r=>DIMS.flatMap(d=>COMPS.map(c=>val(r,QIDX[d.id+'_'+c.id]))));
-  const overall={name:'整體 4C',pre:mean(preAll),post:mean(postAll),d:cohenD(postAll,preAll)};
-  let t=`<div class="notice ok" style="margin-bottom:12px">前測 ${pre.length} 筆、後測 ${post.length} 筆。整體 4C：前測 <b>${overall.pre.toFixed(2)}</b> → 後測 <b>${overall.post.toFixed(2)}</b>，增益 <b>${(overall.post-overall.pre).toFixed(2)}</b>，效果量 <b>d = ${isNaN(overall.d)?'–':overall.d.toFixed(2)}</b>（${isNaN(overall.d)?'':dBand(overall.d)[0]}）。</div>`;
-  // 長條：前測 vs 後測，附 d
-  let b='';[overall].concat(rows).forEach(r=>{const bd=dBand(r.d);
+  const fx=v=>isNaN(v)?'–':v.toFixed(2),fx1=v=>isNaN(v)?'':v.toFixed(1),pc=v=>isNaN(v)?0:Math.max(0,Math.min(100,v/5*100));
+  const paired=pairedSeries(METRIC_OV).preArr.length>=2;
+  const metrics=[{name:'整體 4C',fn:METRIC_OV,head:true}]
+    .concat(DIMS.map(d=>({name:d.name,fn:metricDim(d.id)})))
+    .concat(COMPS.map(c=>({name:c.name,fn:metricComp(c.id)})));
+  const results=metrics.map(m=>{
+    const s=pairedSeries(m.fn);
+    if(paired){const t=pairedTest(s.preArr,s.postArr);return{name:m.name,head:m.head,mode:'paired',n:t.n,nPre:t.n,nPost:t.n,mPre:t.mPre,mPost:t.mPost,md:t.md,dz:t.dz,t:t.t,df:t.df,p:t.p,ciLo:t.ciLo,ciHi:t.ciHi,insufficient:t.insufficient};}
+    const t=welchTest(s.postAll,s.preAll);
+    return{name:m.name,head:m.head,mode:'indep',n:Math.min(s.preAll.length,s.postAll.length),nPre:s.preAll.length,nPost:s.postAll.length,mPre:t.mB,mPost:t.mA,md:t.diff,dz:t.d,t:t.t,df:t.df,p:t.p,ciLo:t.ciLo,ciHi:t.ciHi,insufficient:t.insufficient};
+  });
+  const ov=results[0],dl=v=>v.toFixed(paired?0:1);
+  const modeNote=paired
+    ?`配對樣本分析（依學號 sid 配對，<b>${ov.n}</b> 位學生同時具前後測）`
+    :`<b>未能配對</b>（前後測查無相同學號），改採學生層級<b>獨立樣本</b>比較；如需配對請於作答時填一致的學號`;
+  let head=`<div class="notice ${paired?'ok':'info'}" style="margin-bottom:12px">${modeNote}。整體 4C：前測 <b>${fx(ov.mPre)}</b> → 後測 <b>${fx(ov.mPost)}</b>，增益 <b>${ov.md>=0?'+':''}${fx(ov.md)}</b>`;
+  if(!ov.insufficient)head+=`，${paired?'d<sub>z</sub>':"Cohen's d"} = <b>${fx(ov.dz)}</b>（${isNaN(ov.dz)?'':dBand(ov.dz)[0]}）；t(${dl(ov.df)}) = ${fx(ov.t)}，p ${fmtP(ov.p)}${sigStar(ov.p)}，95% CI [${fx(ov.ciLo)}, ${fx(ov.ciHi)}]`;
+  head+='。</div>';
+  const nLab=paired?'配對 n':'n（前/後）';
+  let tbl=`<div style="overflow:auto"><table style="min-width:660px"><tr><th>指標</th><th class="num">${nLab}</th><th class="num">前測M</th><th class="num">後測M</th><th class="num">增益</th><th class="num">95% CI</th><th class="num">${paired?'d_z':'d'}</th><th class="num">t(df)</th><th class="num">p</th></tr>`;
+  results.forEach(r=>{
+    if(r.insufficient){tbl+=`<tr><td>${r.head?'<b>'+r.name+'</b>':r.name}</td><td class="num" style="color:var(--mute)" colspan="8">樣本不足</td></tr>`;return;}
+    const bd=dBand(r.dz),nCell=paired?r.n:(r.nPre+'/'+r.nPost);
+    tbl+=`<tr><td>${r.head?'<b>'+r.name+'</b>':r.name}</td><td class="num">${nCell}</td><td class="num">${fx(r.mPre)}</td><td class="num">${fx(r.mPost)}</td>`
+      +`<td class="num"><b>${r.md>=0?'+':''}${fx(r.md)}</b></td><td class="num">[${fx(r.ciLo)}, ${fx(r.ciHi)}]</td>`
+      +`<td class="num"><b style="color:${bd[1]}">${fx(r.dz)}</b></td><td class="num">${fx(r.t)} (${dl(r.df)})</td><td class="num">${fmtP(r.p)}${sigStar(r.p)}</td></tr>`;});
+  tbl+='</table></div>';
+  let b='';results.forEach(r=>{
     b+=`<div style="margin-bottom:11px"><div class="bar-label"><span>${r.name}</span>
-      <span>前 ${isNaN(r.pre)?'–':r.pre.toFixed(2)} → 後 ${isNaN(r.post)?'–':r.post.toFixed(2)}　<b style="color:${bd[1]}">d=${isNaN(r.d)?'–':r.d.toFixed(2)}</b></span></div>
+      <span>前 ${fx(r.mPre)} → 後 ${fx(r.mPost)}　${r.insufficient?'':`<b style="color:${dBand(r.dz)[1]}">${paired?'d_z':'d'}=${fx(r.dz)}</b>${sigStar(r.p)}`}</span></div>
       <div style="display:flex;gap:6px">
-        <div class="bar-track" style="flex:1"><div class="bar-fill" style="width:${isNaN(r.pre)?0:r.pre/5*100}%;background:#93C5FD">${isNaN(r.pre)?'':r.pre.toFixed(1)}</div></div>
-        <div class="bar-track" style="flex:1"><div class="bar-fill" style="width:${isNaN(r.post)?0:r.post/5*100}%;background:#1E3A8A">${isNaN(r.post)?'':r.post.toFixed(1)}</div></div>
+        <div class="bar-track" style="flex:1"><div class="bar-fill" style="width:${pc(r.mPre)}%;background:#93C5FD">${fx1(r.mPre)}</div></div>
+        <div class="bar-track" style="flex:1"><div class="bar-fill" style="width:${pc(r.mPost)}%;background:#1E3A8A">${fx1(r.mPost)}</div></div>
       </div></div>`;});
-  const legend=`<div class="tip" style="margin-bottom:8px"><span style="display:inline-block;width:10px;height:10px;background:#93C5FD;border-radius:2px"></span> 前測　<span style="display:inline-block;width:10px;height:10px;background:#1E3A8A;border-radius:2px"></span> 後測</div>`;
-  box.innerHTML=t+legend+b;
+  const legend=`<div class="tip" style="margin:10px 0 6px"><span style="display:inline-block;width:10px;height:10px;background:#93C5FD;border-radius:2px"></span> 前測　<span style="display:inline-block;width:10px;height:10px;background:#1E3A8A;border-radius:2px"></span> 後測　·　* p&lt;.05　** p&lt;.01　*** p&lt;.001</div>`;
+  const caveat=`<div class="tip" style="margin-top:8px">註：效果量與 t 檢定均以<b>學生層級</b>平均計算${paired?'，前後測依學號 sid 配對，報告 d<sub>z</sub> 與配對樣本 t 檢定':'，採 Welch 獨立樣本 t 檢定與合併標準差 Cohen\u2019s d'}；p 值由 t 分布（正則化不完全 Beta 函數）精算。</div>`;
+  box.innerHTML=head+tbl+legend+b+caveat;
 }
 
-/* 電腦自我效能調節 */
+/* 電腦自我效能調節（以前→後測增益為依變項，附保留語） */
 function renderSeModeration(){
   const box=document.getElementById('seBox');
+  const seBy={};DATA.forEach(r=>{const s=parseFloat(r.se);if(isNaN(s))return;const k=(r.sid&&String(r.sid).trim())?String(r.sid).trim():('__noid__:'+r.id);(seBy[k]=seBy[k]||[]).push(s);});
+  const {pre,post}=studentStageMeans(METRIC_OV);
+  const gain={};Object.keys(post).forEach(k=>{if(k in pre&&!isNaN(pre[k])&&!isNaN(post[k]))gain[k]=post[k]-pre[k];});
+  const keys=Object.keys(gain).filter(k=>seBy[k]&&!isNaN(mean(seBy[k])));
+  const gw=v=>Math.max(0,Math.min(100,Math.abs(v)/2*100));
+  if(keys.length>=4){
+    const hiG=[],loG=[];keys.forEach(k=>{const se=mean(seBy[k]);if(se>=4)hiG.push(gain[k]);else if(se<=3)loG.push(gain[k]);});
+    if(hiG.length>=2&&loG.length>=2){
+      const w=welchTest(hiG,loG);let bars='';
+      [['高自我效能 (≥4)',hiG,'#16A34A'],['低自我效能 (≤3)',loG,'#F59E0B']].forEach(([lab,arr,col])=>{const m=mean(arr);
+        bars+=`<div style="margin-bottom:10px"><div class="bar-label"><span>${lab}　<span class="tip">n=${arr.length}</span></span><b>增益 ${m>=0?'+':''}${m.toFixed(2)}</b></div>
+          <div class="bar-track"><div class="bar-fill" style="width:${gw(m)}%;background:${col}">${m.toFixed(2)}</div></div></div>`;});
+      box.innerHTML=bars+`<div class="notice info" style="margin-top:6px">以<b>前→後測學習增益</b>為依變項：高自我效能組平均增益 <b>${mean(hiG).toFixed(2)}</b>、低自我效能組 <b>${mean(loG).toFixed(2)}</b>，組間差 <b>${(mean(hiG)-mean(loG)).toFixed(2)}</b>；獨立樣本 t(${isNaN(w.df)?'–':w.df.toFixed(1)}) = ${isNaN(w.t)?'–':w.t.toFixed(2)}，p ${fmtP(w.p)}${sigStar(w.p)}。<br><span class="tip">此為調節效應之初步證據（比較兩組學習增益）；嚴謹之調節宜檢定「自我效能 × 時間」交互作用，並控制前測基線。</span></div>`;
+      return;
+    }
+  }
+  // 後備：無法配對增益 → 比較整體 4C「水準」（明確標示非調節）
   const withSe=DATA.filter(r=>r.se!==''&&r.se!=null&&!isNaN(parseFloat(r.se)));
   if(withSe.length<2){box.innerHTML=`<div class="notice info">尚無足夠「電腦自我效能」資料（目前 ${withSe.length} 筆）。作答時可於下拉選填 1–5。</div>`;return;}
-  const hi=withSe.filter(r=>parseFloat(r.se)>=4),lo=withSe.filter(r=>parseFloat(r.se)<=3);
-  const ovHi=hi.length?mean(hi.map(ovOf)):NaN,ovLo=lo.length?mean(lo.map(ovOf)):NaN;
-  let b='';
-  [['高自我效能 (≥4)',hi.length,ovHi,'#16A34A'],['低自我效能 (≤3)',lo.length,ovLo,'#F59E0B']].forEach(([lab,n,v,col])=>{
-    b+=`<div style="margin-bottom:10px"><div class="bar-label"><span>${lab}　<span class="tip">n=${n}</span></span><b>${isNaN(v)?'–':v.toFixed(2)}</b></div>
-      <div class="bar-track"><div class="bar-fill" style="width:${isNaN(v)?0:v/5*100}%;background:${col}">${isNaN(v)?'':v.toFixed(1)}</div></div></div>`;});
+  const hiV=withSe.filter(r=>parseFloat(r.se)>=4).map(ovOf),loV=withSe.filter(r=>parseFloat(r.se)<=3).map(ovOf);
+  let bars='';[['高自我效能 (≥4)',hiV,'#16A34A'],['低自我效能 (≤3)',loV,'#F59E0B']].forEach(([lab,arr,col])=>{const m=mean(arr);
+    bars+=`<div style="margin-bottom:10px"><div class="bar-label"><span>${lab}　<span class="tip">n=${arr.length}</span></span><b>${isNaN(m)?'–':m.toFixed(2)}</b></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${isNaN(m)?0:m/5*100}%;background:${col}">${isNaN(m)?'':m.toFixed(1)}</div></div></div>`;});
   let note='';
-  if(hi.length&&lo.length){const diff=ovHi-ovLo;
-    note=`<div class="notice info" style="margin-top:6px">高自我效能組整體 4C <b>${ovHi.toFixed(2)}</b>、低自我效能組 <b>${ovLo.toFixed(2)}</b>，差距 <b>${Math.abs(diff).toFixed(2)}</b> 分${diff>0.05?'（高效能較高，與論文調節效應方向一致）':'。'}。建議於 AI 深度整合前，對低自我效能學生先行強化效能基線。</div>`;}
-  box.innerHTML=b+note;
+  if(hiV.length>=2&&loV.length>=2){const w=welchTest(hiV,loV);
+    note=`<div class="notice info" style="margin-top:6px">高自我效能組整體 4C <b>${mean(hiV).toFixed(2)}</b>、低自我效能組 <b>${mean(loV).toFixed(2)}</b>，差 <b>${(mean(hiV)-mean(loV)).toFixed(2)}</b>；獨立樣本 t(${isNaN(w.df)?'–':w.df.toFixed(1)}) = ${isNaN(w.t)?'–':w.t.toFixed(2)}，p ${fmtP(w.p)}${sigStar(w.p)}。<br><span class="tip">此為<b>水準</b>比較（資料未能依學號配對前後測，無法計算增益）；調節效應應以學習增益與交互作用檢定為準。</span></div>`;}
+  box.innerHTML=bars+note;
 }
 
 /* 資訊背景分組比較 */
@@ -1028,9 +1220,15 @@ function renderBgCompare(){
           <div class="bar-track" style="flex:1"><div class="bar-fill" style="width:${sn[k]/5*100}%;background:var(--c-py)">${sn[k].toFixed(1)}</div></div>
         </div></div>`;});
     document.getElementById('bgBars').innerHTML=b;
+    // 學生層級（依學號平均）獨立樣本 t 檢定
+    const bgStudentOv=name=>{const acc={};DATA.filter(r=>r.bg===name).forEach(r=>{const v=ovOf(r);if(isNaN(v))return;const k=(r.sid&&String(r.sid).trim())?String(r.sid).trim():('__noid__:'+r.id);(acc[k]=acc[k]||[]).push(v);});return Object.values(acc).map(arr=>mean(arr));};
+    const w=welchTest(bgStudentOv('資訊相關'),bgStudentOv('非資訊相關'));
     const d=si.ov-sn.ov,lead=d>0?'資訊相關':'非資訊相關';
-    document.getElementById('bgNote').innerHTML=`📊 整體 4C：資訊相關 <b>${si.ov.toFixed(2)}</b>（n=${si.n}）、非資訊相關 <b>${sn.ov.toFixed(2)}</b>（n=${sn.n}），`
-      +`差距 <b>${Math.abs(d).toFixed(2)}</b> 分${Math.abs(d)<0.05?'，兩組相當':'，由「'+lead+'」較高'}。${Math.abs(d)>0.5?' 落差偏大，建議針對較弱背景組調整教學鷹架與輔助資源。':''}`;
+    let stat='';
+    if(!w.insufficient)stat=`；獨立樣本 t(${isNaN(w.df)?'–':w.df.toFixed(1)}) = ${isNaN(w.t)?'–':w.t.toFixed(2)}，p ${fmtP(w.p)}${sigStar(w.p)}，Cohen\u2019s d = <b>${isNaN(w.d)?'–':w.d.toFixed(2)}</b>（${isNaN(w.d)?'':dBand(w.d)[0]}）`;
+    const concl=w.insufficient?'':((!isNaN(w.p)&&w.p<0.05)?'，差異達統計顯著':'，差異未達統計顯著');
+    document.getElementById('bgNote').innerHTML=`📊 整體 4C（學生層級）：資訊相關 <b>${w.insufficient?si.ov.toFixed(2):w.mA.toFixed(2)}</b>（${w.insufficient?si.n:w.nA} 人）、非資訊相關 <b>${w.insufficient?sn.ov.toFixed(2):w.mB.toFixed(2)}</b>（${w.insufficient?sn.n:w.nB} 人）${stat}${concl}。`
+      +`${Math.abs(d)>0.5?' 兩組落差偏大，建議針對較弱背景組調整教學鷹架與輔助資源。':''}<br><span class="tip">註：t 檢定以學生層級平均（依學號彙總）計算；上表各欄為分組描述統計。</span>`;
   }else{
     document.getElementById('bgBars').innerHTML='';
     document.getElementById('bgNote').innerHTML='ℹ️ 需同時有「資訊相關」與「非資訊相關」兩組資料，才會顯示對比長條與差距分析。請於作答時選擇資訊背景。';
@@ -1176,10 +1374,84 @@ function renderAiBanner(){
 }
 
 /* ====== init ====== */
+/* 趨勢分析（歷史成效）— 使用內嵌 HISTORY，沿用統計引擎；不寫入即時 DATA */
+function renderHistory(){
+  const H=HISTORY||[];
+  const hNum=v=>(v==null||v==='')?NaN:+v;
+  const hOv=r=>mean(r.c.map(hNum));
+  const hDim=(r,idx)=>mean(idx.map(i=>hNum(r.c[i])));
+  const PRE=H.filter(r=>r.g==='前'),POST=H.filter(r=>r.g==='後');
+  function hStage(fn){const a={'前':{},'後':{}};H.forEach(r=>{const v=fn(r);if(isNaN(v))return;(a[r.g][r.s]=a[r.g][r.s]||[]).push(v);});
+    const pre={},post={};for(const k in a['前'])pre[k]=mean(a['前'][k]);for(const k in a['後'])post[k]=mean(a['後'][k]);return{pre,post};}
+  function hPair(fn){const{pre,post}=hStage(fn);const pa=[],qa=[],keys=[];Object.keys(post).forEach(k=>{if(k in pre&&!isNaN(pre[k])&&!isNaN(post[k])){pa.push(pre[k]);qa.push(post[k]);keys.push(k);}});return{pa,qa,keys};}
+  function hAlpha(rows){const comp=rows.filter(r=>r.c.every(x=>x!=null&&x!==''));if(comp.length<3)return NaN;
+    const k=16,items=[];for(let i=0;i<16;i++)items.push(comp.map(r=>hNum(r.c[i])));
+    const iv=items.reduce((s,it)=>s+variance(it),0);const tot=comp.map(r=>r.c.reduce((a,b)=>a+hNum(b),0));const tv=variance(tot);
+    return tv>0?(k/(k-1))*(1-iv/tv):NaN;}
+  if(!H.length){document.getElementById('hKpi').innerHTML='<div class="empty">尚無歷史資料。</div>';return;}
+  const ovP=hPair(hOv),ovT=pairedTest(ovP.pa,ovP.qa),paired=ovP.keys.length;
+  const dimR=HCT_DIMS.map(d=>{const s=hPair(r=>hDim(r,d.idx));return{d,...pairedTest(s.pa,s.qa)};});
+  const aPre=hAlpha(PRE),aPost=hAlpha(POST);
+  const fxh=v=>isNaN(v)?'–':v.toFixed(2);
+  // KPI
+  document.getElementById('hKpi').innerHTML=
+    kpi('前測 / 後測 / 配對',`${PRE.length} / ${POST.length} / ${paired}`,'')
+    +kpi('整體 後測',fxh(ovT.mPost)+'<small> /5</small>',band(ovT.mPost))
+    +kpi('前→後 增益',(ovT.md>=0?'+':'')+fxh(ovT.md)+'<small> 分</small>',dBand(ovT.dz))
+    +kpi('效果量 d_z',fxh(ovT.dz),dBand(ovT.dz))
+    +kpi('信度 α（前/後）',`${isNaN(aPre)?'–':aPre.toFixed(2)} / ${isNaN(aPost)?'–':aPost.toFixed(2)}`,'');
+  document.getElementById('hAlpha').innerHTML=`📐 <b>歷史量表信度</b>：16 題運算思維量表，前測 α=<b>${isNaN(aPre)?'–':aPre.toFixed(3)}</b>（n=${PRE.length}）、後測 α=<b>${isNaN(aPost)?'–':aPost.toFixed(3)}</b>（n=${POST.length}）。整體運算思維：前測 <b>${fxh(ovT.mPre)}</b> → 後測 <b>${fxh(ovT.mPost)}</b>，配對 t(${ovT.df}) = ${fxh(ovT.t)}，p ${fmtP(ovT.p)}${sigStar(ovT.p)}，95% CI [${fxh(ovT.ciLo)}, ${fxh(ovT.ciHi)}]。`;
+  // 構面表
+  let t=`<div style="overflow:auto"><table style="min-width:660px"><tr><th>構面</th><th class="num">配對n</th><th class="num">前測M</th><th class="num">後測M</th><th class="num">增益</th><th class="num">95% CI</th><th class="num">d_z</th><th class="num">t(df)</th><th class="num">p</th></tr>`;
+  [{name:'整體運算思維',r:ovT,head:true}].concat(dimR.map(x=>({name:x.d.name,r:x}))).forEach(({name,r,head})=>{const bd=dBand(r.dz);
+    t+=`<tr><td>${head?'<b>'+name+'</b>':name}</td><td class="num">${r.n}</td><td class="num">${fxh(r.mPre)}</td><td class="num">${fxh(r.mPost)}</td>`
+      +`<td class="num"><b>+${fxh(r.md)}</b></td><td class="num">[${fxh(r.ciLo)}, ${fxh(r.ciHi)}]</td>`
+      +`<td class="num"><b style="color:${bd[1]}">${fxh(r.dz)}</b></td><td class="num">${fxh(r.t)} (${r.df})</td><td class="num">${fmtP(r.p)}${sigStar(r.p)}</td></tr>`;});
+  t+='</table></div><div class="tip" style="margin-top:8px">配對樣本 t 檢定（依學號配對）；d_z＝平均差/差值標準差；p 值由 t 分布精算。* p&lt;.05 ** p&lt;.01 *** p&lt;.001</div>';
+  document.getElementById('hPrepost').innerHTML=t;
+  // 時間趨勢（累積平均，前測 vs 後測）
+  const byTime=arr=>arr.map((r,i)=>({r,i,k:tsKey(r.t)})).sort((a,b)=>(a.k!=null&&b.k!=null)?a.k-b.k:a.i-b.i).map(x=>x.r);
+  function cum(arr){const s=byTime(arr);let acc=0,n=0,pts=[];s.forEach(r=>{const v=hOv(r);if(isNaN(v))return;acc+=v;n++;pts.push([n,acc/n]);});return pts;}
+  const preC=cum(PRE),postC=cum(POST),xmax=Math.max(preC.length,postC.length,1);
+  document.getElementById('hTrend').innerHTML=lineChart([
+    {name:'前測累積均',color:'#93C5FD',pts:preC},
+    {name:'後測累積均',color:'#1E3A8A',pts:postC}
+  ],{xmax,ymin:1,ymax:5,xlab:'依填答時間累積（第 N 筆）'});
+  // 雷達（前 vs 後）
+  document.getElementById('hRadar').innerHTML=hRadar(HCT_DIMS.map(d=>d.short),dimR.map(x=>x.mPre),dimR.map(x=>x.mPost));
+  // 分時段歷史成效
+  const all=byTime(H),n=all.length,segs=Math.min(6,n),size=Math.ceil(n/segs);let rows=[];
+  for(let s=0;s<n;s+=size){const part=all.slice(s,s+size);
+    const pr=part.filter(r=>r.g==='前'),po=part.filter(r=>r.g==='後');
+    rows.push({range:(s+1)+'–'+Math.min(s+size,n),n:part.length,pre:mean(pr.map(hOv)),post:mean(po.map(hOv)),np:pr.length,nq:po.length});}
+  let h='<tr><th>時序區段</th><th class="num">n</th><th class="num">前測均(n)</th><th class="num">後測均(n)</th></tr>';
+  rows.forEach(r=>{h+=`<tr><td>${r.range}</td><td class="num">${r.n}</td><td class="num">${isNaN(r.pre)?'–':r.pre.toFixed(2)} <span class="tip">(${r.np})</span></td><td class="num">${isNaN(r.post)?'–':r.post.toFixed(2)} <span class="tip">(${r.nq})</span></td></tr>`;});
+  document.getElementById('hSegTable').innerHTML=h;
+  // 現況即時對照（live 4C DATA）
+  const liveN=DATA.length,liveOv=liveN?mean(DATA.map(ovOf)):NaN;
+  document.getElementById('hLive').innerHTML=
+    kpi('現況即時資料量',liveN+'<small> 筆</small>','')
+    +kpi('現況 4C 整體（即時）',isNaN(liveOv)?'–':liveOv.toFixed(2)+'<small> /5</small>',isNaN(liveOv)?'':band(liveOv))
+    +kpi('歷史後測整體',fxh(ovT.mPost)+'<small> /5</small>',band(ovT.mPost));
+  document.getElementById('hLiveNote').innerHTML=`註：歷史層為「運算思維（4 構面×4 題）」量表，現況即時層為「4C（心智圖/IPO/Python × 批判/溝通/合作/創造）」量表，兩者題目構面不同，整體 1–5 自評均可作粗略縱貫參照，但<b>不宜逐構面對應</b>。即時統計分頁維持只反映現況資料，未混入歷史。`;
+}
+function hRadar(labels,preV,postV){
+  const n=labels.length,W=320,H=300,cx=W/2,cy=H/2+4,R=98;
+  const ang=i=>(-90+i*360/n)*Math.PI/180,pt=(i,r)=>[cx+r*Math.cos(ang(i)),cy+r*Math.sin(ang(i))];
+  let s=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;max-width:340px;display:block;margin:0 auto">`;
+  for(let g=1;g<=5;g++){let p='';for(let i=0;i<n;i++){const[x,y]=pt(i,R*g/5);p+=(i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1);}s+=`<path d="${p}Z" fill="none" stroke="#E5E7EB"/>`;}
+  for(let i=0;i<n;i++){const[x,y]=pt(i,R);s+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#D1D5DB"/>`;
+    const[lx,ly]=pt(i,R+22);s+=`<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle" font-size="12" font-weight="700" fill="#1E3A8A">${labels[i]}</text>`;}
+  [[preV,'rgba(147,197,253,.35)','#93C5FD'],[postV,'rgba(30,58,138,.22)','#1E3A8A']].forEach(([vals,fill,stroke])=>{
+    let p='';for(let i=0;i<n;i++){const[x,y]=pt(i,R*(vals[i]||0)/5);p+=(i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1);}s+=`<path d="${p}Z" fill="${fill}" stroke="${stroke}" stroke-width="2.5" stroke-linejoin="round"/>`;});
+  s+='</svg>';return s;
+}
+
 renderQuiz();
 renderQuickGrid();
 renderGuide();
 renderAiBanner();
+renderHistory();
 updateConnBadges();
 if(isCloud()){
   DATA=dbLoad();               // 先用本機快取避免空白
