@@ -297,13 +297,14 @@ input.txt:focus{outline:none;border-color:var(--accent)}
       <div><label class="fl-lab">資訊背景 <span class="opt">（分類）</span></label>
         <select class="txt" id="fBg"><option value="">— 請選擇 —</option><option>資訊相關</option><option>非資訊相關</option></select></div>
       <div><label class="fl-lab">測驗階段 <span class="opt">（前/後測）</span></label>
-        <select class="txt" id="fStage"><option value="">一般</option><option>前測</option><option>後測</option></select></div>
+        <select class="txt" id="fStage" onchange="applyStageToQuiz()"><option value="">一般</option><option>前測</option><option>後測</option></select></div>
       <div><label class="fl-lab">電腦自我效能 <span class="opt">（1–5，選填）</span></label>
         <select class="txt" id="fSe"><option value="">— 未填 —</option><option value="1">1 非常沒信心</option><option value="2">2</option><option value="3">3 普通</option><option value="4">4</option><option value="5">5 非常有信心</option></select></div>
       <div style="flex:0 0 auto;display:flex;align-items:flex-end">
         <label class="kiosk"><input type="checkbox" id="kioskMode"> 連續作答模式（送出後自動重置，適合輪流作答）</label>
       </div>
     </div>
+    <div class="notice info" id="teachStageNote" style="display:none;margin-bottom:10px">前測不含教學成效題（第 13–16 題）：課程尚未進行，無法評鑑教學成效，將於後測再評。</div>
     <div id="quizRender"></div>
     <div class="submit-bar">
       <div class="tip" id="quizProgress"></div>
@@ -365,7 +366,7 @@ input.txt:focus{outline:none;border-color:var(--accent)}
       <div><label class="fl-lab">資訊背景 <span class="opt">（分類）</span></label>
         <select class="txt" id="qBg"><option value="">— 請選擇 —</option><option>資訊相關</option><option>非資訊相關</option></select></div>
       <div><label class="fl-lab">測驗階段 <span class="opt">（前/後測）</span></label>
-        <select class="txt" id="qStage"><option value="">一般</option><option>前測</option><option>後測</option></select></div>
+        <select class="txt" id="qStage" onchange="applyStageToQuick()"><option value="">一般</option><option>前測</option><option>後測</option></select></div>
       <div><label class="fl-lab">電腦自我效能 <span class="opt">（1–5）</span></label>
         <select class="txt" id="qSe"><option value="">— 未填 —</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div>
     </div>
@@ -806,20 +807,35 @@ function renderQuiz(){
     let sc='';for(let v=1;v<=5;v++)sc+=`<label onclick="pick(${i},${v},this)"><span class="sv">${v}</span><span class="stxt">${L[v-1]}</span></label>`;
     h+=`<div class="qcard" id="qc${i}"><div class="qmeta">${dchip}${cc}</div><div class="qq">${i+1}. ${esc(qq.key)}</div><div class="scale">${sc}</div></div>`;
   });
-  document.getElementById('quizRender').innerHTML=h;updateProgress();
+  document.getElementById('quizRender').innerHTML=h;applyStageToQuiz();
 }
 function pick(i,v,el){ANS[i]=v;
   el.parentNode.querySelectorAll('label').forEach(l=>l.classList.remove('sel'));el.classList.add('sel');
   document.getElementById('qc'+i).classList.add('answered');updateProgress();}
-function updateProgress(){document.getElementById('quizProgress').textContent=`已完成 ${Object.keys(ANS).length} / ${N} 題`;}
+function teachIdxList(){const o=[];QLIST.forEach((q,i)=>{if(q.type==='t')o.push(i);});return o;}
+function isPreStage(id){const el=document.getElementById(id);return !!el&&el.value==='前測';}
+function applyStageToQuiz(){
+  const pre=isPreStage('fStage');
+  teachIdxList().forEach(i=>{const c=document.getElementById('qc'+i);if(c)c.style.display=pre?'none':'';if(pre)delete ANS[i];});
+  const note=document.getElementById('teachStageNote');if(note)note.style.display=pre?'block':'none';
+  updateProgress();
+}
+function applyStageToQuick(){
+  const pre=isPreStage('qStage');
+  teachIdxList().forEach(i=>{const w=document.getElementById('qgw'+i);if(w)w.style.display=pre?'none':'';if(pre){const inp=document.getElementById('qg'+i);if(inp)inp.value='';}});
+}
+function updateProgress(){const pre=isPreStage('fStage');const total=pre?QLIST.filter(q=>q.type==='m').length:N;
+  let done=0;QLIST.forEach((q,i)=>{if(pre&&q.type==='t')return;if(ANS[i])done++;});
+  document.getElementById('quizProgress').textContent=`已完成 ${done} / ${total} 題`;}
 /* 學號後4碼正規化：只留數字、取後4碼（保隱私＋穩定配對） */
 function sid4(v){return String(v||'').replace(/\D/g,'').slice(-4);}
 async function submitQuiz(){
-  const missing=[];QLIST.forEach((q,i)=>{if(!ANS[i])missing.push(i+1);});
+  const pre=isPreStage('fStage');
+  const missing=[];QLIST.forEach((q,i)=>{if(pre&&q.type==='t')return;if(!ANS[i])missing.push(i+1);});
   if(missing.length){msg('quizMsg','err',`✗ 尚有 ${missing.length} 題未作答（第 ${missing.slice(0,8).join('、')}${missing.length>8?'…':''} 題）。`);
     const f=document.getElementById('qc'+(missing[0]-1));if(f)f.scrollIntoView({behavior:'smooth',block:'center'});return;}
   const rec={id:uid(),ts:now(),sid:sid4(document.getElementById('fSid').value),group:document.getElementById('fGroup').value.trim(),
-    bg:document.getElementById('fBg').value,stage:document.getElementById('fStage').value,se:document.getElementById('fSe').value,scores:QLIST.map((q,i)=>ANS[i])};
+    bg:document.getElementById('fBg').value,stage:document.getElementById('fStage').value,se:document.getElementById('fSe').value,scores:QLIST.map((q,i)=>(pre&&q.type==='t')?'':ANS[i])};
   const btn=document.getElementById('subBtn');if(btn){btn.disabled=true;btn.textContent='送出中…';}
   await pushRecord(rec);
   toast(`✓ 已收集第 ${DATA.length} 筆`);
@@ -839,22 +855,23 @@ function renderQuickGrid(){
   QLIST.forEach((qq,i)=>{
     let lab;if(qq.type==='m'){const d=DIMS.find(x=>x.id===qq.dim),c=COMPS.find(x=>x.id===qq.comp);lab=d.tag+'·'+c.name.slice(0,2);}
     else lab='T'+(qq.idx+1);
-    h+=`<div class="gc"><label>${lab}</label><input id="qg${i}" inputmode="numeric" maxlength="1" onkeydown="qgKey(event,${i})" oninput="qgNext(this,${i})"></div>`;
+    h+=`<div class="gc" id="qgw${i}"><label>${lab}</label><input id="qg${i}" inputmode="numeric" maxlength="1" onkeydown="qgKey(event,${i})" oninput="qgNext(this,${i})"></div>`;
   });
-  document.getElementById('quickGrid').innerHTML=h;
+  document.getElementById('quickGrid').innerHTML=h;applyStageToQuick();
 }
 function qgNext(el,i){el.value=el.value.replace(/[^1-5]/g,'');if(el.value&&i<N-1){const nx=document.getElementById('qg'+(i+1));if(nx)nx.focus();}}
 function qgKey(e,i){if(e.key==='Enter'){e.preventDefault();quickAdd();}}
 function quickAdd(){
+  const pre=isPreStage('qStage');
   const scores=[];let filled=0;
-  for(let i=0;i<N;i++){const v=document.getElementById('qg'+i).value.trim();
+  for(let i=0;i<N;i++){if(pre&&QLIST[i].type==='t'){scores.push('');continue;}const v=document.getElementById('qg'+i).value.trim();
     if(v>='1'&&v<='5'){scores.push(parseInt(v));filled++;}else scores.push('');}
   if(filled<8){msg('quickMsg','err',`✗ 至少需填 8 題（目前 ${filled} 題）。`);return;}
   pushRecord({id:uid(),ts:now(),sid:sid4(document.getElementById('qSid').value),group:document.getElementById('qGroup').value.trim(),bg:document.getElementById('qBg').value,stage:document.getElementById('qStage').value,se:document.getElementById('qSe').value,scores});
   toast(`✓ 已新增第 ${DATA.length} 筆`);
   for(let i=0;i<N;i++)document.getElementById('qg'+i).value='';
   document.getElementById('qSid').value='';document.getElementById('qGroup').value='';document.getElementById('qBg').value='';
-  document.getElementById('qStage').value='';document.getElementById('qSe').value='';
+  document.getElementById('qStage').value='';document.getElementById('qSe').value='';applyStageToQuick();
   document.getElementById('qg0').focus();
   msg('quickMsg','ok',`✓ 已新增，資料區現有 ${DATA.length} 筆。游標已回到第一格。`);
 }
@@ -1052,7 +1069,9 @@ function loadDemo(){
   const basePost={mind_crit:4.3,mind_comm:4.0,mind_collab:4.4,mind_create:4.1,ipo_crit:3.9,ipo_comm:3.7,ipo_collab:4.0,ipo_create:3.6,py_crit:3.4,py_comm:3.5,py_collab:3.8,py_create:3.3};
   const tbPre=[3.3,3.4,3.0,3.1],tbPost=[4.2,4.3,3.9,4.0],rnd=()=>Math.random();
   const lat=Array.from({length:30},()=>(rnd()+rnd()-1)*0.85); // 每位學生跨題一致的潛在能力偏移 → 產生合理內部一致性
-  function mk(stage,base,tb,s){const scores=QLIST.map(qq=>{let mn=qq.type==='m'?base[qq.dim+'_'+qq.comp]:tb[qq.idx];
+  function mk(stage,base,tb,s){const scores=QLIST.map(qq=>{
+    if(qq.type==='t'&&stage==='前測')return '';   // 前測不評教學成效
+    let mn=qq.type==='m'?base[qq.dim+'_'+qq.comp]:tb[qq.idx];
     let v=Math.round(mn+lat[s]+(rnd()-0.5)*1.0);return Math.max(1,Math.min(5,v));});
     return {id:uid(),ts:'2025/06/0'+((s%7)+1)+' '+(9+s%8)+':00:00',sid:'(示範)'+(s+1),group:'示範第'+((s%6)+1)+'組',
       bg:(s%5<3?'資訊相關':'非資訊相關'),stage:stage,se:String(Math.max(1,Math.min(5,Math.round(3+(rnd()+rnd()-1)*1.5)))),scores};}
