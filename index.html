@@ -292,7 +292,7 @@ input.txt:focus{outline:none;border-color:var(--accent)}
     <h2><span class="bar"></span>學習成效自評問卷</h2>
     <p class="sub">1＝非常不同意，5＝非常同意。共 16 題，約 3 分鐘。送出即存入前端資料區。</p>
     <div class="id-row">
-      <div><label class="fl-lab">學號 <span class="opt">（選填）</span></label><input class="txt" id="fSid" placeholder="例：B11012345"></div>
+      <div><label class="fl-lab">學號後4碼 <span class="opt">（利前後測配對）</span></label><input class="txt" id="fSid" inputmode="numeric" maxlength="4" oninput="this.value=this.value.replace(/\D/g,'').slice(0,4)" placeholder="例：2345"><div class="tip" style="font-size:10.5px;margin-top:3px">僅填學號後 4 碼，保護隱私並作為前後測配對依據</div></div>
       <div><label class="fl-lab">組別 <span class="opt">（選填）</span></label><input class="txt" id="fGroup" placeholder="例：第 3 組"></div>
       <div><label class="fl-lab">資訊背景 <span class="opt">（分類）</span></label>
         <select class="txt" id="fBg"><option value="">— 請選擇 —</option><option>資訊相關</option><option>非資訊相關</option></select></div>
@@ -360,7 +360,7 @@ input.txt:focus{outline:none;border-color:var(--accent)}
     <h2><span class="bar"></span>⚡ 快速批次輸入</h2>
     <p class="sub">老師可逐列鍵入紙本答案：填完一列按 <b>Enter</b> 或「新增」即存入資料區，游標自動回到第一格，連續輸入最快。</p>
     <div class="id-row" style="margin-bottom:10px">
-      <div><label class="fl-lab">學號 <span class="opt">（選填）</span></label><input class="txt" id="qSid"></div>
+      <div><label class="fl-lab">學號後4碼 <span class="opt">（利配對）</span></label><input class="txt" id="qSid" inputmode="numeric" maxlength="4" oninput="this.value=this.value.replace(/\D/g,'').slice(0,4)" placeholder="例：2345"></div>
       <div><label class="fl-lab">組別 <span class="opt">（選填）</span></label><input class="txt" id="qGroup"></div>
       <div><label class="fl-lab">資訊背景 <span class="opt">（分類）</span></label>
         <select class="txt" id="qBg"><option value="">— 請選擇 —</option><option>資訊相關</option><option>非資訊相關</option></select></div>
@@ -497,10 +497,20 @@ input.txt:focus{outline:none;border-color:var(--accent)}
     <div style="overflow:auto"><table id="hSegTable"></table></div>
   </div>
   <div class="card">
-    <h2><span class="bar"></span>🕒 現況即時對照</h2>
-    <p class="sub">即時統計（4C 平台本機/雲端資料）持續反映當前狀況；下列為現況即時值，與上方歷史基準並列參照。</p>
-    <div class="kpi-grid" id="hLive"></div>
+    <h2><span class="bar"></span>🕒 現況即時對照（縱貫趨勢）</h2>
+    <p class="sub">將「歷史前測 → 歷史後測 → 現況即時（4C 平台）」置於同一軸，呈現整體 1–5 自評的縱貫走勢；即時統計分頁仍只反映現況。</p>
+    <div class="viz-box" style="border:none;padding:0"><div id="hMilestone"></div></div>
+    <div class="tip" style="text-align:center;margin:6px 0">實線＝同量表（運算思維 前→後測）　·　虛線＝跨量表參照（對照即時 4C，僅供縱貫示意）　·　● 歷史　○ 現況即時</div>
+    <div class="kpi-grid" id="hLive" style="margin-top:12px"></div>
     <div class="notice warn" id="hLiveNote" style="margin-top:12px"></div>
+  </div>
+  <div class="card">
+    <h2><span class="bar"></span>⬇ 歷史整合資料下載</h2>
+    <p class="sub">本分頁所用之運算思維前後測整合資料（已內嵌、清理並依學號配對），可匯出備份或另作分析。</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn primary" onclick="dlHistCSV()">下載 CSV（含 16 題）</button>
+      <button class="btn" onclick="dlHistJSON()">下載 JSON</button>
+    </div>
   </div>
 </section>
 
@@ -792,11 +802,13 @@ function pick(i,v,el){ANS[i]=v;
   el.parentNode.querySelectorAll('label').forEach(l=>l.classList.remove('sel'));el.classList.add('sel');
   document.getElementById('qc'+i).classList.add('answered');updateProgress();}
 function updateProgress(){document.getElementById('quizProgress').textContent=`已完成 ${Object.keys(ANS).length} / ${N} 題`;}
+/* 學號後4碼正規化：只留數字、取後4碼（保隱私＋穩定配對） */
+function sid4(v){return String(v||'').replace(/\D/g,'').slice(-4);}
 async function submitQuiz(){
   const missing=[];QLIST.forEach((q,i)=>{if(!ANS[i])missing.push(i+1);});
   if(missing.length){msg('quizMsg','err',`✗ 尚有 ${missing.length} 題未作答（第 ${missing.slice(0,8).join('、')}${missing.length>8?'…':''} 題）。`);
     const f=document.getElementById('qc'+(missing[0]-1));if(f)f.scrollIntoView({behavior:'smooth',block:'center'});return;}
-  const rec={id:uid(),ts:now(),sid:document.getElementById('fSid').value.trim(),group:document.getElementById('fGroup').value.trim(),
+  const rec={id:uid(),ts:now(),sid:sid4(document.getElementById('fSid').value),group:document.getElementById('fGroup').value.trim(),
     bg:document.getElementById('fBg').value,stage:document.getElementById('fStage').value,se:document.getElementById('fSe').value,scores:QLIST.map((q,i)=>ANS[i])};
   const btn=document.getElementById('subBtn');if(btn){btn.disabled=true;btn.textContent='送出中…';}
   await pushRecord(rec);
@@ -828,7 +840,7 @@ function quickAdd(){
   for(let i=0;i<N;i++){const v=document.getElementById('qg'+i).value.trim();
     if(v>='1'&&v<='5'){scores.push(parseInt(v));filled++;}else scores.push('');}
   if(filled<8){msg('quickMsg','err',`✗ 至少需填 8 題（目前 ${filled} 題）。`);return;}
-  pushRecord({id:uid(),ts:now(),sid:document.getElementById('qSid').value.trim(),group:document.getElementById('qGroup').value.trim(),bg:document.getElementById('qBg').value,stage:document.getElementById('qStage').value,se:document.getElementById('qSe').value,scores});
+  pushRecord({id:uid(),ts:now(),sid:sid4(document.getElementById('qSid').value),group:document.getElementById('qGroup').value.trim(),bg:document.getElementById('qBg').value,stage:document.getElementById('qStage').value,se:document.getElementById('qSe').value,scores});
   toast(`✓ 已新增第 ${DATA.length} 筆`);
   for(let i=0;i<N;i++)document.getElementById('qg'+i).value='';
   document.getElementById('qSid').value='';document.getElementById('qGroup').value='';document.getElementById('qBg').value='';
@@ -1134,7 +1146,7 @@ function renderPrePost(){
   const ov=results[0],dl=v=>v.toFixed(paired?0:1);
   const modeNote=paired
     ?`配對樣本分析（依學號 sid 配對，<b>${ov.n}</b> 位學生同時具前後測）`
-    :`<b>未能配對</b>（前後測查無相同學號），改採學生層級<b>獨立樣本</b>比較；如需配對請於作答時填一致的學號`;
+    :`<b>未能配對</b>（前後測查無相同學號），改採學生層級<b>獨立樣本</b>比較；如需配對，請學生於前後測作答時填寫<b>一致的學號後 4 碼</b>。`;
   let head=`<div class="notice ${paired?'ok':'info'}" style="margin-bottom:12px">${modeNote}。整體 4C：前測 <b>${fx(ov.mPre)}</b> → 後測 <b>${fx(ov.mPost)}</b>，增益 <b>${ov.md>=0?'+':''}${fx(ov.md)}</b>`;
   if(!ov.insufficient)head+=`，${paired?'d<sub>z</sub>':"Cohen's d"} = <b>${fx(ov.dz)}</b>（${isNaN(ov.dz)?'':dBand(ov.dz)[0]}）；t(${dl(ov.df)}) = ${fx(ov.t)}，p ${fmtP(ov.p)}${sigStar(ov.p)}，95% CI [${fx(ov.ciLo)}, ${fx(ov.ciHi)}]`;
   head+='。</div>';
@@ -1429,6 +1441,11 @@ function renderHistory(){
   document.getElementById('hSegTable').innerHTML=h;
   // 現況即時對照（live 4C DATA）
   const liveN=DATA.length,liveOv=liveN?mean(DATA.map(ovOf)):NaN;
+  document.getElementById('hMilestone').innerHTML=hMilestone([
+    {label:'歷史前測',value:ovT.mPre,color:'#93C5FD'},
+    {label:'歷史後測',value:ovT.mPost,color:'#1E3A8A'},
+    {label:'現況即時 (4C)',value:liveOv,color:'#16A34A',present:true}
+  ]);
   document.getElementById('hLive').innerHTML=
     kpi('現況即時資料量',liveN+'<small> 筆</small>','')
     +kpi('現況 4C 整體（即時）',isNaN(liveOv)?'–':liveOv.toFixed(2)+'<small> /5</small>',isNaN(liveOv)?'':band(liveOv))
@@ -1446,6 +1463,34 @@ function hRadar(labels,preV,postV){
     let p='';for(let i=0;i<n;i++){const[x,y]=pt(i,R*(vals[i]||0)/5);p+=(i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1);}s+=`<path d="${p}Z" fill="${fill}" stroke="${stroke}" stroke-width="2.5" stroke-linejoin="round"/>`;});
   s+='</svg>';return s;
 }
+// 縱貫里程碑趨勢圖（歷史前測 → 歷史後測 → 現況即時，同軸 1–5）
+function hMilestone(points){
+  const W=560,H=232,pl=38,pr=18,pt=24,pb=42,ymin=1,ymax=5;
+  const X=i=>pl+(points.length<=1?0:i/(points.length-1))*(W-pl-pr);
+  const Y=v=>H-pb-((v-ymin)/(ymax-ymin))*(H-pt-pb);
+  let s=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto">`;
+  for(let g=ymin;g<=ymax;g++){const y=Y(g);s+=`<line x1="${pl}" y1="${y}" x2="${W-pr}" y2="${y}" stroke="#EEF1F5"/><text x="${pl-6}" y="${y+4}" text-anchor="end" font-size="11" fill="#9CA3AF">${g}</text>`;}
+  for(let i=0;i<points.length-1;i++){const a=points[i],b=points[i+1];if(isNaN(a.value)||isNaN(b.value))continue;
+    const dash=(a.present||b.present)?'stroke-dasharray="5 4"':'';
+    s+=`<line x1="${X(i)}" y1="${Y(a.value)}" x2="${X(i+1)}" y2="${Y(b.value)}" stroke="#9CA3AF" stroke-width="2.5" ${dash}/>`;}
+  points.forEach((p,i)=>{const x=X(i);
+    if(!isNaN(p.value)){const y=Y(p.value);
+      s+=p.present?`<circle cx="${x}" cy="${y}" r="6.5" fill="#fff" stroke="${p.color}" stroke-width="3"/>`:`<circle cx="${x}" cy="${y}" r="6.5" fill="${p.color}"/>`;
+      s+=`<text x="${x}" y="${y-13}" text-anchor="middle" font-size="14" font-weight="800" fill="${p.color}">${p.value.toFixed(2)}</text>`;
+    }else{s+=`<text x="${x}" y="${(Y(ymin)+pt)/2}" text-anchor="middle" font-size="11" fill="#9CA3AF">（尚無即時資料）</text>`;}
+    s+=`<text x="${x}" y="${H-pb+24}" text-anchor="middle" font-size="12.5" font-weight="700" fill="#374151">${p.label}</text>`;});
+  s+='</svg>';return s;
+}
+// 歷史整合資料匯出（由內嵌 HISTORY 還原）
+function histRows(){const ex={0:'無',1:'少許(<6個月)',2:'有(≥6個月)'};
+  return (HISTORY||[]).map(r=>({時間戳記:r.t,學號後4碼:r.s,測驗階段:r.g==='前'?'前測':'後測',
+    程式設計經驗:(r.e===''||r.e==null)?'':(ex[r.e]||''),
+    ...Object.fromEntries(r.c.map((v,i)=>['Q'+(i+1),(v==null)?'':v]))}));}
+function dlHistJSON(){dl('運算思維_整合資料.json',JSON.stringify(histRows(),null,2),'application/json');}
+function dlHistCSV(){const rows=histRows();if(!rows.length)return;const cols=Object.keys(rows[0]);
+  const esc=c=>/[",\n]/.test(String(c))?'"'+String(c).replace(/"/g,'""')+'"':c;
+  const body=rows.map(r=>cols.map(k=>esc(r[k])).join(','));
+  dl('運算思維_整合資料.csv','\ufeff'+cols.join(',')+'\n'+body.join('\n')+'\n','text/csv');}
 
 renderQuiz();
 renderQuickGrid();
