@@ -482,7 +482,12 @@ input.txt:focus{outline:none;border-color:var(--accent)}
     <h2>📈 趨勢分析｜歷史學習成效</h2>
     <p>整合「運算思維課程學習調查問卷」前測—後測歷史資料（已內嵌），依學號配對統計歷史成效與趨勢。此層為<b>歷史基準</b>，與上方「即時統計」分流——即時分析持續反映現況時效性。</p>
   </div>
-  <div class="card"><h2><span class="bar"></span>歷史成效關鍵指標</h2><div class="kpi-grid" id="hKpi"></div>
+  <div class="card"><h2><span class="bar"></span>歷史成效關鍵指標</h2>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+      <button class="btn primary" id="mergeLiveBtn" onclick="toggleMergeLive()">⚡ 即時資料立即匯入歷史成效關鍵指標</button>
+      <span class="tip" id="mergeLiveStatus"></span>
+    </div>
+    <div class="kpi-grid" id="hKpi"></div>
     <div class="notice info" id="hAlpha" style="margin-top:14px"></div></div>
   <div class="card"><h2><span class="bar"></span>四構面前測 → 後測（配對樣本效果量）</h2><div id="hPrepost"></div></div>
   <div class="card">
@@ -1387,6 +1392,12 @@ function renderAiBanner(){
 
 /* ====== init ====== */
 /* 趨勢分析（歷史成效）— 使用內嵌 HISTORY，沿用統計引擎；不寫入即時 DATA */
+let mergeLive=false;
+function toggleMergeLive(){
+  const live=DATA.filter(r=>r.stage==='前測'||r.stage==='後測').length;
+  if(!mergeLive&&live===0){const s=document.getElementById('mergeLiveStatus');if(s)s.innerHTML='目前無「前測/後測」即時資料可併入；請先於學生作答選擇測驗階段。';return;}
+  mergeLive=!mergeLive;renderHistory();
+}
 function renderHistory(){
   const H=HISTORY||[];
   const hNum=v=>(v==null||v==='')?NaN:+v;
@@ -1405,14 +1416,29 @@ function renderHistory(){
   const dimR=HCT_DIMS.map(d=>{const s=hPair(r=>hDim(r,d.idx));return{d,...pairedTest(s.pa,s.qa)};});
   const aPre=hAlpha(PRE),aPost=hAlpha(POST);
   const fxh=v=>isNaN(v)?'–':v.toFixed(2);
-  // KPI
+  // 即時 4C 併入（整體 1–5 層級）— 僅影響「關鍵指標」KPI；構面與信度仍為歷史 CT
+  const livePre=DATA.filter(r=>r.stage==='前測').length,livePost=DATA.filter(r=>r.stage==='後測').length,mLiveN=livePre+livePost;
+  const useMerge=mergeLive&&mLiveN>0;
+  let ovKPI=ovT,pairedKPI=paired,nPreLab=PRE.length,nPostLab=POST.length;
+  if(useMerge){
+    const a={'前':{},'後':{}};
+    H.forEach(r=>{const v=hOv(r);if(isNaN(v))return;(a[r.g]['H:'+r.s]=a[r.g]['H:'+r.s]||[]).push(v);});
+    DATA.forEach(r=>{const g=r.stage==='前測'?'前':r.stage==='後測'?'後':null;if(!g)return;const v=ovOf(r);if(isNaN(v))return;const k='L:'+(r.sid||r.id);(a[g][k]=a[g][k]||[]).push(v);});
+    const pre={},post={};for(const k in a['前'])pre[k]=mean(a['前'][k]);for(const k in a['後'])post[k]=mean(a['後'][k]);
+    const pa=[],qa=[];Object.keys(post).forEach(k=>{if(k in pre&&!isNaN(pre[k])&&!isNaN(post[k])){pa.push(pre[k]);qa.push(post[k]);}});
+    ovKPI=pairedTest(pa,qa);pairedKPI=pa.length;nPreLab=PRE.length+livePre;nPostLab=POST.length+livePost;
+  }
+  const mlb=document.getElementById('mergeLiveBtn'),mls=document.getElementById('mergeLiveStatus');
+  if(mlb){mlb.innerHTML=useMerge?'↩ 還原歷史基準（移除即時）':'⚡ 即時資料立即匯入歷史成效關鍵指標';mlb.className='btn'+(useMerge?'':' primary');}
+  if(mls)mls.innerHTML=useMerge?`已併入即時 4C <b>${mLiveN}</b> 筆（整體 1–5 層級）`:(mLiveN>0?`可併入即時 4C ${mLiveN} 筆`:'目前無即時前後測資料');
+  // KPI（關鍵指標）
   document.getElementById('hKpi').innerHTML=
-    kpi('前測 / 後測 / 配對',`${PRE.length} / ${POST.length} / ${paired}`,'')
-    +kpi('整體 後測',fxh(ovT.mPost)+'<small> /5</small>',band(ovT.mPost))
-    +kpi('前→後 增益',(ovT.md>=0?'+':'')+fxh(ovT.md)+'<small> 分</small>',dBand(ovT.dz))
-    +kpi('效果量 d_z',fxh(ovT.dz),dBand(ovT.dz))
+    kpi('前測 / 後測 / 配對',`${nPreLab} / ${nPostLab} / ${pairedKPI}`,useMerge?['含即時','#B45309']:'')
+    +kpi('整體 後測',fxh(ovKPI.mPost)+'<small> /5</small>',band(ovKPI.mPost))
+    +kpi('前→後 增益',(ovKPI.md>=0?'+':'')+fxh(ovKPI.md)+'<small> 分</small>',dBand(ovKPI.dz))
+    +kpi('效果量 d_z',fxh(ovKPI.dz),dBand(ovKPI.dz))
     +kpi('信度 α（前/後）',`${isNaN(aPre)?'–':aPre.toFixed(2)} / ${isNaN(aPost)?'–':aPost.toFixed(2)}`,'');
-  document.getElementById('hAlpha').innerHTML=`📐 <b>歷史量表信度</b>：16 題運算思維量表，前測 α=<b>${isNaN(aPre)?'–':aPre.toFixed(3)}</b>（n=${PRE.length}）、後測 α=<b>${isNaN(aPost)?'–':aPost.toFixed(3)}</b>（n=${POST.length}）。整體運算思維：前測 <b>${fxh(ovT.mPre)}</b> → 後測 <b>${fxh(ovT.mPost)}</b>，配對 t(${ovT.df}) = ${fxh(ovT.t)}，p ${fmtP(ovT.p)}${sigStar(ovT.p)}，95% CI [${fxh(ovT.ciLo)}, ${fxh(ovT.ciHi)}]。`;
+  document.getElementById('hAlpha').innerHTML=`📐 <b>歷史量表信度</b>：16 題運算思維量表，前測 α=<b>${isNaN(aPre)?'–':aPre.toFixed(3)}</b>（n=${PRE.length}）、後測 α=<b>${isNaN(aPost)?'–':aPost.toFixed(3)}</b>（n=${POST.length}）。整體運算思維（歷史）：前測 <b>${fxh(ovT.mPre)}</b> → 後測 <b>${fxh(ovT.mPost)}</b>，配對 t(${ovT.df}) = ${fxh(ovT.t)}，p ${fmtP(ovT.p)}${sigStar(ovT.p)}，95% CI [${fxh(ovT.ciLo)}, ${fxh(ovT.ciHi)}]。${useMerge?`<br><span style="color:#B45309">※ 上方「關鍵指標」已併入即時 4C ${mLiveN} 筆（整體層級）；下方構面表與信度 α 仍為歷史運算思維量表，以維持效度。</span>`:''}`;
   // 構面表
   let t=`<div style="overflow:auto"><table style="min-width:660px"><tr><th>構面</th><th class="num">配對n</th><th class="num">前測M</th><th class="num">後測M</th><th class="num">增益</th><th class="num">95% CI</th><th class="num">d_z</th><th class="num">t(df)</th><th class="num">p</th></tr>`;
   [{name:'整體運算思維',r:ovT,head:true}].concat(dimR.map(x=>({name:x.d.name,r:x}))).forEach(({name,r,head})=>{const bd=dBand(r.dz);
