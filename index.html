@@ -292,7 +292,7 @@ input.txt:focus{outline:none;border-color:var(--accent)}
     <h2><span class="bar"></span>學習成效自評問卷</h2>
     <p class="sub">1＝非常不同意，5＝非常同意。共 16 題，約 3 分鐘。送出即存入前端資料區。</p>
     <div class="id-row">
-      <div><label class="fl-lab">學號後4碼 <span class="opt">（利前後測配對）</span></label><input class="txt" id="fSid" inputmode="numeric" maxlength="4" oninput="this.value=this.value.replace(/\D/g,'').slice(0,4)" placeholder="例：2345"><div class="tip" style="font-size:10.5px;margin-top:3px">僅填學號後 4 碼，保護隱私並作為前後測配對依據</div></div>
+      <div><label class="fl-lab">學號後4碼 <span class="opt">（利前後測配對）</span></label><input class="txt" id="fSid" inputmode="numeric" maxlength="4" oninput="this.value=this.value.replace(/\D/g,'').slice(0,4);checkPairCode()" placeholder="例：2345"><div class="tip" style="font-size:10.5px;margin-top:3px">僅填學號後 4 碼，保護隱私並作為前後測配對依據</div><div class="notice" id="pairHint" style="display:none;margin-top:6px;padding:8px 12px;font-size:12.5px"></div></div>
       <div><label class="fl-lab">組別 <span class="opt">（選填）</span></label><input class="txt" id="fGroup" placeholder="例：第 3 組"></div>
       <div><label class="fl-lab">資訊背景 <span class="opt">（分類）</span></label>
         <select class="txt" id="fBg"><option value="">— 請選擇 —</option><option>資訊相關</option><option>非資訊相關</option></select></div>
@@ -514,6 +514,21 @@ input.txt:focus{outline:none;border-color:var(--accent)}
     <h2><span class="bar"></span>🔄 即時配對統計（4C · 現況）</h2>
     <p class="sub">目前即時 4C 資料依「學號後 4 碼」配對之前後測效果量，隨作答/同步即時重算；與上方歷史基準分流，保有現況時效性。</p>
     <div id="hLivePair"></div>
+  </div>
+  <div class="card">
+    <h2><span class="bar"></span>🔔 配對缺口與提醒</h2>
+    <p class="sub">即時比對前後測「學號後 4 碼」，列出待補學生方便提醒（僅顯示後 4 碼，保護隱私）。</p>
+    <div id="pairGaps"></div>
+  </div>
+  <div class="card">
+    <h2><span class="bar"></span>📌 研究限制（主客觀）</h2>
+    <div class="notice info" style="line-height:1.75">
+      <b>客觀限制</b>：①<b>單組前後測、無對照組</b>——成熟、測驗、歷史效應無法排除，成長不宜逕作課程之因果結論；②<b>樣本與流失</b>——後測回收與可配對數偏少，檢定力與代表性受限，且可能有流失偏誤；③<b>自陳量表</b>——測得為「自我知覺」之能力提升，非客觀表現；④即時 4C（12 題）與歷史運算思維（16 題）量表構面不同，併入僅限整體 1–5 層級。
+    </div>
+    <div class="notice warn" style="line-height:1.75;margin-top:8px">
+      <b>主觀／教學實務限制</b>：①課堂施測時間有限、學生自願填答，可能有<b>社會期許</b>與<b>共同方法偏誤</b>；②單一教師、單一班級脈絡，外推需審慎；③後測平均偏高時恐有<b>天花板效應</b>；④教學介入為整體課程，難以分離單一教學元素之貢獻。
+    </div>
+    <div class="tip" style="margin-top:8px">建議於論文「研究限制與未來研究」段落據實陳述上述各點，並一併報告效果量、95% 信賴區間、無母數（Wilcoxon）與多重比較（Holm）校正結果，以提升可信度。</div>
   </div>
   <div class="card">
     <h2><span class="bar"></span>⬇ 歷史整合資料下載</h2>
@@ -861,7 +876,7 @@ function applyStageToQuiz(){
   const pre=isPreStage('fStage');
   teachIdxList().forEach(i=>{const c=document.getElementById('qc'+i);if(c)c.style.display=pre?'none':'';if(pre)delete ANS[i];});
   const note=document.getElementById('teachStageNote');if(note)note.style.display=pre?'block':'none';
-  updateProgress();
+  updateProgress();checkPairCode();
 }
 function applyStageToQuick(){
   const pre=isPreStage('qStage');
@@ -1127,7 +1142,7 @@ let STAT={};
 function compute(){
   if(!DATA.length){
     ['statsEmpty','reportEmpty'].forEach(i=>document.getElementById(i).style.display='block');
-    ['statsContent','reportContent'].forEach(i=>document.getElementById(i).style.display='none');renderLivePair();renderHistory();return;}
+    ['statsContent','reportContent'].forEach(i=>document.getElementById(i).style.display='none');renderLivePair();renderHistory();renderPairGaps();return;}
   const cell={};DIMS.forEach(d=>COMPS.forEach(c=>{const a=cellArr(d.id,c.id);cell[d.id+'_'+c.id]={m:mean(a),sd:sd(a),n:a.filter(x=>!isNaN(x)).length};}));
   const dimAvg={};DIMS.forEach(d=>{let all=[];COMPS.forEach(c=>all=all.concat(cellArr(d.id,c.id)));dimAvg[d.id]=mean(all);});
   const compAvg={};COMPS.forEach(c=>{let all=[];DIMS.forEach(d=>all=all.concat(cellArr(d.id,c.id)));compAvg[c.id]=mean(all);});
@@ -1141,7 +1156,7 @@ function compute(){
   else if(!isNaN(alphaPre)){alpha=alphaPre;alphaStage='前測';}
   else{alpha=cronbachAlpha(DATA);alphaStage='全部';}
   STAT={cell,dimAvg,compAvg,overall,teach,teachAvg,alpha,alphaPre,alphaPost,alphaStage,nPre:preRecs.length,nPost:postRecs.length,n:DATA.length};
-  renderStats();renderTrend();renderReport();renderLivePair();renderHistory();
+  renderStats();renderTrend();renderReport();renderLivePair();renderHistory();renderPairGaps();
 }
 function scoreColor(v){if(isNaN(v))return '#9CA3AF';
   const st=[[1,[220,38,38]],[3,[245,158,11]],[4,[132,204,22]],[5,[22,163,74]]];let lo=st[0],hi=st[st.length-1];
@@ -1481,6 +1496,31 @@ function renderLivePair(){
   h+=pubPairedTable(res,{minWidth:900,caveat:'即時 4C 配對樣本，依學號後 4 碼配對；'});
   box.innerHTML=h;
 }
+function preCodeSet(){return new Set(DATA.filter(r=>r.stage==='前測'&&r.sid).map(r=>r.sid));}
+function checkPairCode(){
+  const el=document.getElementById('pairHint');if(!el)return;
+  const stage=document.getElementById('fStage').value,sid=sid4(document.getElementById('fSid').value);
+  if(stage!=='後測'||!sid){el.style.display='none';el.innerHTML='';return;}
+  el.style.display='block';
+  if(preCodeSet().has(sid)){el.className='notice ok';el.innerHTML='✓ 已找到對應前測（'+sid+'）：本次後測可與前測配對。';}
+  else{el.className='notice warn';el.innerHTML='⚠ 查無前測（'+sid+'）：請確認學號後 4 碼與前測一致；若尚未做前測，請<b>先完成前測</b>再做後測，否則無法配對分析。';}
+}
+function renderPairGaps(){
+  const box=document.getElementById('pairGaps');if(!box)return;
+  const pre=new Set(DATA.filter(r=>r.stage==='前測'&&r.sid).map(r=>r.sid));
+  const post=new Set(DATA.filter(r=>r.stage==='後測'&&r.sid).map(r=>r.sid));
+  if(!pre.size&&!post.size){box.innerHTML='<div class="notice info">尚無前/後測資料。</div>';return;}
+  const postNoPre=[...post].filter(s=>!pre.has(s)).sort();
+  const preNoPost=[...pre].filter(s=>!post.has(s)).sort();
+  const paired=[...post].filter(s=>pre.has(s)).length;
+  const blk=(title,arr,hint)=>arr.length
+    ?`<div class="notice warn"><b>${title}（${arr.length} 人）</b>：${hint}<div style="margin-top:6px;font-family:Consolas,monospace;word-break:break-all">${arr.join('、')}</div><button class="btn" style="margin-top:8px" onclick="copyCodes('${arr.join(',')}')">📋 複製名單</button></div>`
+    :`<div class="notice ok">✓ ${title}：無</div>`;
+  box.innerHTML=`<div class="notice info">前測 <b>${pre.size}</b> 人 · 後測 <b>${post.size}</b> 人 · 已配對 <b>${paired}</b> 人</div>`
+    +blk('後測未配對（有後測、查無前測）',postNoPre,'多為學號後 4 碼填錯或未做前測；請提醒這些學生確認配對碼。')
+    +blk('前測尚未做後測（待提醒施測）',preNoPost,'已做前測但尚未完成後測；請提醒補做以利配對。');
+}
+function copyCodes(s){const arr=s.split(',');const t=arr.join('、');if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t);if(typeof toast==='function')toast('已複製 '+arr.length+' 筆配對碼');}
 let mergeLive=false;
 function toggleMergeLive(){
   const live=DATA.filter(r=>r.stage==='前測'||r.stage==='後測').length;
