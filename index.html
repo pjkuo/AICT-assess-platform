@@ -834,8 +834,10 @@ async function pushRecord(rec){
   try{await cloudPost(payload);}          // 成功 → 已落地，下次同步以雲端為準
   catch(e){outboxAdd(payload);refresh();} // 失敗/離線 → 進重送佇列，不遺失
   updateConnBadges();
+  scheduleCloudSync();                     // 有更新 → 自動啟動即時同步（去抖動）
 }
-let autoTimer=null;
+let autoTimer=null,syncTimer=null;
+function scheduleCloudSync(delay){if(!isCloud())return;clearTimeout(syncTimer);syncTimer=setTimeout(()=>syncNow(true),delay||1200);}
 function startAuto(){if(autoTimer)clearInterval(autoTimer);if(isCloud()&&AUTO_REFRESH_SEC>0)autoTimer=setInterval(()=>syncNow(true),AUTO_REFRESH_SEC*1000);}
 function updateConnBadges(){
   const cloud=isCloud(),pend=outboxCount();
