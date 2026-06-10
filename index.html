@@ -331,7 +331,6 @@ input.txt:focus{outline:none;border-color:var(--accent)}
       <button class="btn ghost" onclick="document.getElementById('jfile').click()">⬆ 匯入 JSON</button>
       <button class="btn ghost" onclick="document.getElementById('cfile').click()">⬆ 匯入 CSV</button>
       <button class="btn ghost" onclick="loadDemo()">🎲 載入示範資料</button>
-      <button class="btn danger" onclick="clearData()">🗑 清空本機快取</button>
     </div>
     <input type="file" id="jfile" accept=".json,application/json" style="display:none">
     <input type="file" id="cfile" accept=".csv" style="display:none">
@@ -952,8 +951,7 @@ function renderData(){
   document.getElementById('dataTable').innerHTML=h;
 }
 function delRec(id){if(!confirm('確定刪除這筆作答？'))return;DATA=DATA.filter(r=>r.id!==id);refresh();}
-function clearData(){if(!DATA.length)return;if(!confirm(`確定清空資料區（共 ${DATA.length} 筆）？建議先匯出備份，此動作無法復原。`))return;
-  DATA=[];refresh();msg('dataMsg','ok','✓ 資料區已清空。');}
+/* 清空本機快取功能已依需求移除 */
 function exportJSON(){dl(`4C資料區_${stamp()}.json`,JSON.stringify(DATA,null,2),'application/json');}
 function exportCSV(){
   const header=['時間戳記','學號','組別','資訊背景','測驗階段','電腦自我效能',...QLIST.map(q=>q.key)].join(',');
