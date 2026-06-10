@@ -640,6 +640,49 @@ function tCritical(df,alpha){alpha=alpha||0.05;if(df<=0)return NaN;let lo=0,hi=1
   for(let i=0;i<200;i++){const mid=(lo+hi)/2;(tTwoTailP(mid,df)>alpha)?lo=mid:hi=mid;}return(lo+hi)/2;}
 function fmtP(p){return isNaN(p)?'–':(p<0.001?'< .001':'= '+p.toFixed(3).replace(/^0/,''));}
 function sigStar(p){return isNaN(p)?'':(p<0.001?' ***':p<0.01?' **':p<0.05?' *':' n.s.');}
+/* ===== 發表級補強：Wilcoxon、Holm 校正、d_z 信賴區間、共用配對表 ===== */
+function erf(x){const t=1/(1+0.3275911*Math.abs(x));const y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x);return x>=0?y:-y;}
+function normCdf(x){return 0.5*(1+erf(x/Math.SQRT2));}
+// 配對樣本 Wilcoxon 符號等級檢定（雙尾）；n≤16 精確列舉，否則常態近似（含連續性與同分校正）
+function wilcoxon(preArr,postArr){
+  const diffs=[];for(let i=0;i<preArr.length;i++){const d=postArr[i]-preArr[i];if(!isNaN(d)&&d!==0)diffs.push(d);}
+  const n=diffs.length;if(n<2)return{n,p:NaN,insufficient:true};
+  const items=diffs.map(d=>({a:Math.abs(d),s:d>0?1:-1})).sort((x,y)=>x.a-y.a);
+  let i=0;while(i<n){let j=i;while(j+1<n&&items[j+1].a===items[i].a)j++;const r=(i+j)/2+1;for(let k=i;k<=j;k++)items[k].rank=r;i=j+1;}
+  const ranks=items.map(o=>o.rank),Wp=items.reduce((s,o)=>s+(o.s>0?o.rank:0),0);
+  let p;
+  if(n<=16){const total=1<<n,eps=1e-9;let le=0,ge=0;
+    for(let m=0;m<total;m++){let w=0;for(let b=0;b<n;b++)if(m&(1<<b))w+=ranks[b];if(w<=Wp+eps)le++;if(w>=Wp-eps)ge++;}
+    p=Math.min(1,2*Math.min(le,ge)/total);
+  }else{const meanW=n*(n+1)/4,tie={};items.forEach(o=>tie[o.a]=(tie[o.a]||0)+1);let ts=0;Object.values(tie).forEach(t=>ts+=t*t*t-t);
+    const sd=Math.sqrt(n*(n+1)*(2*n+1)/24-ts/48),z=sd>0?(Wp-meanW)/sd:NaN;p=isNaN(z)?NaN:2*(1-normCdf(Math.abs(z)));}
+  return{n,Wp,p,insufficient:false};
+}
+// Holm-Bonferroni 校正：輸入 p 陣列（含 NaN），回傳對齊的校正後 p
+function holmAdjust(pvals){const idx=pvals.map((p,i)=>({p,i})).filter(o=>!isNaN(o.p)).sort((a,b)=>a.p-b.p);
+  const m=idx.length,out=pvals.map(()=>NaN);let prev=0;idx.forEach((o,k)=>{let a=(m-k)*o.p;a=Math.min(1,Math.max(a,prev));prev=a;out[o.i]=a;});return out;}
+// d_z 近似 95% 信賴區間（SE≈√(1/n + d²/2n)）
+function dzCI(dz,n,df){if(isNaN(dz)||n<2)return[NaN,NaN];const se=Math.sqrt(1/n+dz*dz/(2*n)),tc=tCritical(df,0.05);return[dz-tc*se,dz+tc*se];}
+// 共用：發表級配對統計表（d_z[CI] + Holm 校正 p + Wilcoxon p + 小樣本警示）
+function pubPairedTable(res,opt){
+  opt=opt||{};const fx=v=>isNaN(v)?'–':v.toFixed(2);
+  res.forEach(r=>{if(r.insufficient)return;const w=wilcoxon(r.pre||[],r.post||[]);r.wp=w.p;const ci=dzCI(r.dz,r.n,r.df);r.dzLo=ci[0];r.dzHi=ci[1];});
+  const adj=holmAdjust(res.map(r=>r.insufficient?NaN:r.p));res.forEach((r,i)=>r.pHolm=adj[i]);
+  const ovN=(res[0]&&!res[0].insufficient)?res[0].n:NaN;
+  let warn='';
+  if(!isNaN(ovN)&&ovN<10)warn=`<div class="notice warn">⚠ 配對樣本偏少（n=${ovN}）：效果量與檢定結果不穩定，請謹慎解讀並擴大樣本。下表已並列無母數 <b>Wilcoxon</b> 檢定與 <b>Holm</b> 多重比較校正供對照。</div>`;
+  let h=warn+`<div style="overflow:auto"><table style="min-width:${opt.minWidth||880}px"><tr><th>指標</th><th class="num">配對n</th><th class="num">前測M</th><th class="num">後測M</th><th class="num">增益</th><th class="num">d_z [95% CI]</th><th class="num">t(df)</th><th class="num">p</th><th class="num">p(Holm)</th><th class="num">Wilcoxon p</th></tr>`;
+  res.forEach(r=>{const nm=r.head?'<b>'+r.name+'</b>':r.name;
+    if(r.insufficient){h+=`<tr><td>${nm}</td><td class="num" colspan="9" style="color:var(--mute)">樣本不足</td></tr>`;return;}
+    const bd=dBand(r.dz);
+    h+=`<tr><td>${nm}</td><td class="num">${r.n}</td><td class="num">${fx(r.mPre)}</td><td class="num">${fx(r.mPost)}</td>`
+      +`<td class="num"><b>${r.md>=0?'+':''}${fx(r.md)}</b></td>`
+      +`<td class="num"><b style="color:${bd[1]}">${fx(r.dz)}</b> <span class="tip">[${fx(r.dzLo)}, ${fx(r.dzHi)}]</span></td>`
+      +`<td class="num">${fx(r.t)} (${r.df})</td><td class="num">${fmtP(r.p)}${sigStar(r.p)}</td>`
+      +`<td class="num">${fmtP(r.pHolm)}${sigStar(r.pHolm)}</td><td class="num">${fmtP(r.wp)}</td></tr>`;});
+  h+=`</table></div><div class="tip" style="margin-top:8px">${opt.caveat||''}d_z＝平均差/差值標準差，[95% CI] 採近似標準誤；<b>p(Holm)</b> 為跨指標 Holm 多重比較校正後 p；<b>Wilcoxon</b> 為符號等級無母數檢定（n≤16 精確、否則常態近似）。* p&lt;.05 ** p&lt;.01 *** p&lt;.001</div>`;
+  return h;
+}
 
 // 配對樣本 t 檢定（依差值），回傳 d_z 與配對 t、p、95%CI
 function pairedTest(preArr,postArr){
@@ -1168,7 +1211,7 @@ function renderPrePost(){
     .concat(COMPS.map(c=>({name:c.name,fn:metricComp(c.id)})));
   const results=metrics.map(m=>{
     const s=pairedSeries(m.fn);
-    if(paired){const t=pairedTest(s.preArr,s.postArr);return{name:m.name,head:m.head,mode:'paired',n:t.n,nPre:t.n,nPost:t.n,mPre:t.mPre,mPost:t.mPost,md:t.md,dz:t.dz,t:t.t,df:t.df,p:t.p,ciLo:t.ciLo,ciHi:t.ciHi,insufficient:t.insufficient};}
+    if(paired){const t=pairedTest(s.preArr,s.postArr);return{name:m.name,head:m.head,mode:'paired',pre:s.preArr,post:s.postArr,n:t.n,nPre:t.n,nPost:t.n,mPre:t.mPre,mPost:t.mPost,md:t.md,dz:t.dz,t:t.t,df:t.df,p:t.p,ciLo:t.ciLo,ciHi:t.ciHi,insufficient:t.insufficient};}
     const t=welchTest(s.postAll,s.preAll);
     return{name:m.name,head:m.head,mode:'indep',n:Math.min(s.preAll.length,s.postAll.length),nPre:s.preAll.length,nPost:s.postAll.length,mPre:t.mB,mPost:t.mA,md:t.diff,dz:t.d,t:t.t,df:t.df,p:t.p,ciLo:t.ciLo,ciHi:t.ciHi,insufficient:t.insufficient};
   });
@@ -1179,15 +1222,19 @@ function renderPrePost(){
   let head=`<div class="notice ${paired?'ok':'info'}" style="margin-bottom:12px">${modeNote}。整體 4C：前測 <b>${fx(ov.mPre)}</b> → 後測 <b>${fx(ov.mPost)}</b>，增益 <b>${ov.md>=0?'+':''}${fx(ov.md)}</b>`;
   if(!ov.insufficient)head+=`，${paired?'d<sub>z</sub>':"Cohen's d"} = <b>${fx(ov.dz)}</b>（${isNaN(ov.dz)?'':dBand(ov.dz)[0]}）；t(${dl(ov.df)}) = ${fx(ov.t)}，p ${fmtP(ov.p)}${sigStar(ov.p)}，95% CI [${fx(ov.ciLo)}, ${fx(ov.ciHi)}]`;
   head+='。</div>';
-  const nLab=paired?'配對 n':'n（前/後）';
-  let tbl=`<div style="overflow:auto"><table style="min-width:660px"><tr><th>指標</th><th class="num">${nLab}</th><th class="num">前測M</th><th class="num">後測M</th><th class="num">增益</th><th class="num">95% CI</th><th class="num">${paired?'d_z':'d'}</th><th class="num">t(df)</th><th class="num">p</th></tr>`;
-  results.forEach(r=>{
-    if(r.insufficient){tbl+=`<tr><td>${r.head?'<b>'+r.name+'</b>':r.name}</td><td class="num" style="color:var(--mute)" colspan="8">樣本不足</td></tr>`;return;}
-    const bd=dBand(r.dz),nCell=paired?r.n:(r.nPre+'/'+r.nPost);
-    tbl+=`<tr><td>${r.head?'<b>'+r.name+'</b>':r.name}</td><td class="num">${nCell}</td><td class="num">${fx(r.mPre)}</td><td class="num">${fx(r.mPost)}</td>`
-      +`<td class="num"><b>${r.md>=0?'+':''}${fx(r.md)}</b></td><td class="num">[${fx(r.ciLo)}, ${fx(r.ciHi)}]</td>`
-      +`<td class="num"><b style="color:${bd[1]}">${fx(r.dz)}</b></td><td class="num">${fx(r.t)} (${dl(r.df)})</td><td class="num">${fmtP(r.p)}${sigStar(r.p)}</td></tr>`;});
-  tbl+='</table></div>';
+  let tbl;
+  if(paired){
+    tbl=pubPairedTable(results,{minWidth:900,caveat:'即時 4C，前後測依學號後 4 碼配對；'});
+  }else{
+    tbl=`<div style="overflow:auto"><table style="min-width:680px"><tr><th>指標</th><th class="num">n（前/後）</th><th class="num">前測M</th><th class="num">後測M</th><th class="num">增益</th><th class="num">95% CI</th><th class="num">d</th><th class="num">t(df)</th><th class="num">p</th></tr>`;
+    results.forEach(r=>{
+      if(r.insufficient){tbl+=`<tr><td>${r.head?'<b>'+r.name+'</b>':r.name}</td><td class="num" style="color:var(--mute)" colspan="8">樣本不足</td></tr>`;return;}
+      const bd=dBand(r.dz),nCell=r.nPre+'/'+r.nPost;
+      tbl+=`<tr><td>${r.head?'<b>'+r.name+'</b>':r.name}</td><td class="num">${nCell}</td><td class="num">${fx(r.mPre)}</td><td class="num">${fx(r.mPost)}</td>`
+        +`<td class="num"><b>${r.md>=0?'+':''}${fx(r.md)}</b></td><td class="num">[${fx(r.ciLo)}, ${fx(r.ciHi)}]</td>`
+        +`<td class="num"><b style="color:${bd[1]}">${fx(r.dz)}</b></td><td class="num">${fx(r.t)} (${dl(r.df)})</td><td class="num">${fmtP(r.p)}${sigStar(r.p)}</td></tr>`;});
+    tbl+='</table></div>';
+  }
   let b='';results.forEach(r=>{
     b+=`<div style="margin-bottom:11px"><div class="bar-label"><span>${r.name}</span>
       <span>前 ${fx(r.mPre)} → 後 ${fx(r.mPost)}　${r.insufficient?'':`<b style="color:${dBand(r.dz)[1]}">${paired?'d_z':'d'}=${fx(r.dz)}</b>${sigStar(r.p)}`}</span></div>
@@ -1428,14 +1475,10 @@ function renderLivePair(){
   const rows=[{name:'整體 4C',fn:ovOf,head:true}]
     .concat(DIMS.map(d=>({name:d.name,fn:metricDim(d.id)})))
     .concat(COMPS.map(c=>({name:c.name,fn:metricComp(c.id)})));
-  const res=rows.map(m=>{const s=pairedSeries(m.fn);return{name:m.name,head:m.head,...pairedTest(s.preArr,s.postArr)};});
+  const res=rows.map(m=>{const s=pairedSeries(m.fn);return{name:m.name,head:m.head,pre:s.preArr,post:s.postArr,...pairedTest(s.preArr,s.postArr)};});
   const ov=res[0];
   let h=`<div class="notice ${(!ov.insufficient&&ov.p<0.05)?'ok':'info'}">即時配對樣本（依學號後 4 碼，<b>${ov.n}</b> 位學生同時具前後測）：整體 4C 前測 <b>${fx(ov.mPre)}</b> → 後測 <b>${fx(ov.mPost)}</b>，增益 <b>${ov.md>=0?'+':''}${fx(ov.md)}</b>，d<sub>z</sub> = <b>${fx(ov.dz)}</b>（${isNaN(ov.dz)?'':dBand(ov.dz)[0]}）；配對 t(${ov.df}) = ${fx(ov.t)}，p ${fmtP(ov.p)}${sigStar(ov.p)}，95% CI [${fx(ov.ciLo)}, ${fx(ov.ciHi)}]。</div>`;
-  h+=`<div style="overflow:auto"><table style="min-width:640px"><tr><th>指標</th><th class="num">配對n</th><th class="num">前測M</th><th class="num">後測M</th><th class="num">增益</th><th class="num">95% CI</th><th class="num">d_z</th><th class="num">t(df)</th><th class="num">p</th></tr>`;
-  res.forEach(r=>{if(r.insufficient){h+=`<tr><td>${r.head?'<b>'+r.name+'</b>':r.name}</td><td class="num" colspan="8" style="color:var(--mute)">樣本不足</td></tr>`;return;}
-    const bd=dBand(r.dz);
-    h+=`<tr><td>${r.head?'<b>'+r.name+'</b>':r.name}</td><td class="num">${r.n}</td><td class="num">${fx(r.mPre)}</td><td class="num">${fx(r.mPost)}</td><td class="num"><b>${r.md>=0?'+':''}${fx(r.md)}</b></td><td class="num">[${fx(r.ciLo)}, ${fx(r.ciHi)}]</td><td class="num"><b style="color:${bd[1]}">${fx(r.dz)}</b></td><td class="num">${fx(r.t)} (${r.df})</td><td class="num">${fmtP(r.p)}${sigStar(r.p)}</td></tr>`;});
-  h+='</table></div><div class="tip" style="margin-top:8px">即時 4C 配對樣本 t 檢定（依學號後 4 碼配對）；d_z＝平均差/差值標準差；p 值由 t 分布精算。* p&lt;.05 ** p&lt;.01 *** p&lt;.001</div>';
+  h+=pubPairedTable(res,{minWidth:900,caveat:'即時 4C 配對樣本，依學號後 4 碼配對；'});
   box.innerHTML=h;
 }
 let mergeLive=false;
@@ -1486,13 +1529,9 @@ function renderHistory(){
     +kpi('信度 α（前/後）',`${isNaN(aPre)?'–':aPre.toFixed(2)} / ${isNaN(aPost)?'–':aPost.toFixed(2)}`,'');
   document.getElementById('hAlpha').innerHTML=`📐 <b>歷史量表信度</b>：16 題運算思維量表，前測 α=<b>${isNaN(aPre)?'–':aPre.toFixed(3)}</b>（n=${PRE.length}）、後測 α=<b>${isNaN(aPost)?'–':aPost.toFixed(3)}</b>（n=${POST.length}）。整體運算思維（歷史）：前測 <b>${fxh(ovT.mPre)}</b> → 後測 <b>${fxh(ovT.mPost)}</b>，配對 t(${ovT.df}) = ${fxh(ovT.t)}，p ${fmtP(ovT.p)}${sigStar(ovT.p)}，95% CI [${fxh(ovT.ciLo)}, ${fxh(ovT.ciHi)}]。${useMerge?`<br><span style="color:#B45309">※ 上方「關鍵指標」已併入即時 4C ${mLiveN} 筆（整體層級）；下方構面表與信度 α 仍為歷史運算思維量表，以維持效度。</span>`:''}`;
   // 構面表
-  let t=`<div style="overflow:auto"><table style="min-width:660px"><tr><th>構面</th><th class="num">配對n</th><th class="num">前測M</th><th class="num">後測M</th><th class="num">增益</th><th class="num">95% CI</th><th class="num">d_z</th><th class="num">t(df)</th><th class="num">p</th></tr>`;
-  [{name:'整體運算思維',r:ovT,head:true}].concat(dimR.map(x=>({name:x.d.name,r:x}))).forEach(({name,r,head})=>{const bd=dBand(r.dz);
-    t+=`<tr><td>${head?'<b>'+name+'</b>':name}</td><td class="num">${r.n}</td><td class="num">${fxh(r.mPre)}</td><td class="num">${fxh(r.mPost)}</td>`
-      +`<td class="num"><b>+${fxh(r.md)}</b></td><td class="num">[${fxh(r.ciLo)}, ${fxh(r.ciHi)}]</td>`
-      +`<td class="num"><b style="color:${bd[1]}">${fxh(r.dz)}</b></td><td class="num">${fxh(r.t)} (${r.df})</td><td class="num">${fmtP(r.p)}${sigStar(r.p)}</td></tr>`;});
-  t+='</table></div><div class="tip" style="margin-top:8px">配對樣本 t 檢定（依學號配對）；d_z＝平均差/差值標準差；p 值由 t 分布精算。* p&lt;.05 ** p&lt;.01 *** p&lt;.001</div>';
-  document.getElementById('hPrepost').innerHTML=t;
+  const hRes=[{name:'整體運算思維',head:true,pre:ovP.pa,post:ovP.qa,...ovT}]
+    .concat(HCT_DIMS.map(d=>{const s=hPair(r=>hDim(r,d.idx));return{name:d.name,pre:s.pa,post:s.qa,...pairedTest(s.pa,s.qa)};}));
+  document.getElementById('hPrepost').innerHTML=pubPairedTable(hRes,{minWidth:900,caveat:'歷史運算思維量表，依學號配對；'});
   // 時間趨勢（累積平均，前測 vs 後測）
   const byTime=arr=>arr.map((r,i)=>({r,i,k:tsKey(r.t)})).sort((a,b)=>(a.k!=null&&b.k!=null)?a.k-b.k:a.i-b.i).map(x=>x.r);
   function cum(arr){const s=byTime(arr);let acc=0,n=0,pts=[];s.forEach(r=>{const v=hOv(r);if(isNaN(v))return;acc+=v;n++;pts.push([n,acc/n]);});return pts;}
